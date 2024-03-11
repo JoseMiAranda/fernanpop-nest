@@ -6,7 +6,7 @@ import firebase from 'src/firebase/firebase';
 @Injectable()
 export class ProductsService {
   
-  limit = 4;
+  limit = 10;
 
   constructor() { }
   
@@ -182,4 +182,3 @@ export class ProductsService {
   }
 
 }
-n
