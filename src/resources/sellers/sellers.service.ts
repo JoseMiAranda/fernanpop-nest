@@ -16,8 +16,8 @@ export class SellersService {
     return await this.productsService.findBySeller(queryParams, sellerId)
   }
 
-  async updateProduct(updateProductDto: UpdateProductDto, sellerId: any) {
-    return await this.productsService.update(updateProductDto, sellerId)
+  async updateProduct(id: string, updateProductDto: UpdateProductDto, sellerId: any) {
+    return await this.productsService.update(id, updateProductDto, sellerId)
   }
 
   async removeProduct(idProduct: string, idSeller: string) {

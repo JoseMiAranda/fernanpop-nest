@@ -18,9 +18,9 @@ export class SellersController {
     return this.sellersService.productsBySeller(queryParams, request["firebaseUser"]["uid"]);
   }
 
-  @Patch('/product')
-  update(@Body() updateProductDto: UpdateProductDto, @Req() request: Request) {
-    return this.sellersService.updateProduct(updateProductDto, request["firebaseUser"]["uid"]);
+  @Patch('/product/:id')
+  update(@Param('id') idProduct: string, @Body() updateProductDto: UpdateProductDto, @Req() request: Request) {
+    return this.sellersService.updateProduct(idProduct, updateProductDto, request["firebaseUser"]["uid"]);
   }
 
   @Delete('/product/:id')

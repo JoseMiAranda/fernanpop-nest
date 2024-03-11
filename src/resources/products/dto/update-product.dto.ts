@@ -3,9 +3,6 @@ import { CreateProductDto } from './create-product.dto';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {
-
-    @IsString()
-    id: string
     
     @IsOptional()
     @IsString()

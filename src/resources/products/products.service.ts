@@ -25,8 +25,7 @@ export class ProductsService {
   }
 
   // UPDATE
-  async update(updateProductDto: UpdateProductDto, sellerId: string) {
-    let { id, ...rest } = updateProductDto;
+  async update( id: string, updateProductDto: UpdateProductDto, sellerId: string) {
     console.log(id);
     let docRef = firebase.firestore().collection('products').doc(id);
     let findedDoc = await docRef.get();
@@ -37,10 +36,13 @@ export class ProductsService {
 
     return docRef.update({ ...updateProductDto })
       .then(() => {
+        let id = findedDoc.id;
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        return { ...findedDoc.data(), ...updateProductDto }
+        return { ...findedDoc.data(), ...updateProductDto, id }
       })
-      .catch(() => { throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR) });
+      .catch(() => {
+        throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
+      });
   }
 
   // DELETE
@@ -54,7 +56,8 @@ export class ProductsService {
     return docRef.delete()
       .then(() => {
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        return { ...findedDoc.data() }
+        let id = findedDoc.id;
+        return { ...findedDoc.data(), id };
       })
       .catch(() => { throw new HttpException("can't-delete-product", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
@@ -96,7 +99,6 @@ export class ProductsService {
   }
 
   async findById(id: string) {
-    console.log(id);
     let docsRef = firebase.firestore().collection('products').doc(id);
 
     // Obtenemos únicamente el documento por el id
@@ -106,7 +108,7 @@ export class ProductsService {
       { throw new HttpException("", HttpStatus.NO_CONTENT) }
     }
     
-    return { ...findedDoc.data() }
+    return { ...findedDoc.data(), id }
   }
 
   async findBySeller(queryParams: any, sellerId: string) {
