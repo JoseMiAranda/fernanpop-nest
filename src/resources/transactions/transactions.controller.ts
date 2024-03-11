@@ -7,10 +7,10 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  @Post()
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionsService.create(createTransactionDto);
-  }
+  // @Post()
+  // create(@Body() createTransactionDto: CreateTransactionDto) {
+  //   return this.transactionsService.create(createTransactionDto);
+  // }
 
   @Get()
   findAll() {

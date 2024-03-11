@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@
 import { SellersService } from './sellers.service';
 import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
+import { CreateTransactionDto } from '../transactions/dto/create-transaction.dto';
 
 
 @Controller('seller')
@@ -26,5 +27,10 @@ export class SellersController {
   @Delete('/product/:id')
   remove(@Param('id') idProduct: string, @Req() request: Request) {
     return this.sellersService.removeProduct(idProduct, request["firebaseUser"]["uid"]);
+  }
+
+  @Post('/transaction')
+  createTransaction(@Body() createTransactionDto: CreateTransactionDto, @Req() request: Request) {
+    return this.sellersService.createTransacion(createTransactionDto, request["firebaseUser"]["uid"]);
   }
 }
