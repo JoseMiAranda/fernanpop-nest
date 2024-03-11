@@ -12,11 +12,9 @@ export class ApiTokenCheck implements NestMiddleware {
             throw new HttpException({ message: 'Authorization api key required' }, HttpStatus.UNAUTHORIZED)
         }
 
-        // Bearer ezawagawg.....
+        // Barear ezawagawg.....
         const token = authorization.slice(7)
 
-        console.log(token);
-    
         const user = await firebase
           .auth()
           .verifyIdToken(token)
@@ -26,6 +24,6 @@ export class ApiTokenCheck implements NestMiddleware {
     
         // Agregamos a nuestra serverva nuestro usuario
         req.firebaseUser = user
-        next()
+        next();
       }
 }

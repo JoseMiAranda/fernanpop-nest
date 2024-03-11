@@ -26,7 +26,6 @@ export class ProductsService {
 
   // UPDATE
   async update( id: string, updateProductDto: UpdateProductDto, sellerId: string) {
-    console.log(id);
     let docRef = firebase.firestore().collection('products').doc(id);
     let findedDoc = await docRef.get();
 
@@ -152,10 +151,12 @@ export class ProductsService {
     // Obtenemos todos los parmaétros y si no están los inicializamos
     const {q = '', price_min = 0, prime_max = Number.MAX_SAFE_INTEGER} = queryParams;
 
+    const removedQueryAccents = this.removeAccents(q).toLocaleLowerCase();
+
     // let skip = (page - 1) * this.limit;
 
     // Filtramos siguiendo el siguiente orden:
-    //  - Término
+    //  - Término -> ambos sin tildes ni mayúsculas
     //  - Precio
     let productsTemp = [];
 
@@ -163,7 +164,10 @@ export class ProductsService {
       // Obtenemos el id del producto para asignarlo a la lista
       let id = product.id;
       let dataProduct = product.data();
-      if (dataProduct.title.toLowerCase().includes(q) && dataProduct.price >= price_min && dataProduct.price <= prime_max) {
+      
+      const removedPorductAccents = this.removeAccents(dataProduct.title).toLocaleLowerCase();
+
+      if (removedPorductAccents.includes(removedQueryAccents) && dataProduct.price >= price_min && dataProduct.price <= prime_max) {
         productsTemp.push({ ...product.data(), id });
       }
     });
@@ -171,4 +175,11 @@ export class ProductsService {
     return productsTemp;
   }
 
+
+  private removeAccents(word: string) {
+    const removedAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return removedAccents; 
+  }
+
 }
+n
