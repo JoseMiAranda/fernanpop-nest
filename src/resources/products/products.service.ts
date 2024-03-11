@@ -117,7 +117,7 @@ export class ProductsService {
     let findedDocs = await docsRef.where("sellerId", "==", sellerId).get();
 
     if (findedDocs.empty) {
-      return [];
+      { throw new HttpException("", HttpStatus.NO_CONTENT) }
     }
 
     // Filtramos los documentos
@@ -174,7 +174,6 @@ export class ProductsService {
 
     return productsTemp;
   }
-
 
   private removeAccents(word: string) {
     const removedAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");

@@ -32,7 +32,7 @@ export class SellersService {
     // Si el producto no existe
     let product;
     try {
-        product = await this.productsService.findById(createTransactionDto.idProduct);
+        product = await this.productsService.findById(createTransactionDto.productId);
     } catch (error) {
         throw new HttpException("product-not-found", HttpStatus.NOT_FOUND);
     }
@@ -44,6 +44,10 @@ export class SellersService {
     }
 
     return this.transactionsService.create(product.id, sellerId, buyerId);
+  }
+
+  async transactionsByUser(sellerId: any) {
+    return await this.transactionsService.findBySeller(sellerId);
   }
 
   async getSellerById(idSeller: string) {

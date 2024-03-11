@@ -20,17 +20,22 @@ export class SellersController {
   }
 
   @Patch('/product/:id')
-  update(@Param('id') idProduct: string, @Body() updateProductDto: UpdateProductDto, @Req() request: Request) {
-    return this.sellersService.updateProduct(idProduct, updateProductDto, request["firebaseUser"]["uid"]);
+  update(@Param('id') productId: string, @Body() updateProductDto: UpdateProductDto, @Req() request: Request) {
+    return this.sellersService.updateProduct(productId, updateProductDto, request["firebaseUser"]["uid"]);
   }
 
   @Delete('/product/:id')
-  remove(@Param('id') idProduct: string, @Req() request: Request) {
-    return this.sellersService.removeProduct(idProduct, request["firebaseUser"]["uid"]);
+  remove(@Param('id') productId: string, @Req() request: Request) {
+    return this.sellersService.removeProduct(productId, request["firebaseUser"]["uid"]);
   }
 
   @Post('/transaction')
   createTransaction(@Body() createTransactionDto: CreateTransactionDto, @Req() request: Request) {
     return this.sellersService.createTransacion(createTransactionDto, request["firebaseUser"]["uid"]);
+  }
+
+  @Get('/transactions')
+  transactionsByUser(@Req() request: Request) {
+    return this.sellersService.transactionsByUser(request["firebaseUser"]["uid"]);
   }
 }

@@ -28,19 +28,31 @@ export class TransactionsService {
       .catch(() => { throw new HttpException("can't-create-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 
-  findAll() {
-    return `This action returns all transactions`;
-  }
+  async findBySeller(sellerId: string) {
+    let docsRef = firebase.firestore().collection('transactions');
 
-  findOne(id: number) {
-    return `This action returns a #${id} transaction`;
-  }
+    // Obtenemos el registro compras / ventas del usuario
+    let userBuyer = await docsRef.where("sellerId", "==", sellerId).get();
+    let userSeller = await docsRef.where("buyerId", "==", sellerId).get()
+    // Obtenemos la data
 
-  update(id: number, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
-  }
+    let transactionsTemp = [];
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
+    userBuyer.docs.forEach((transaction) => {
+      const id = transaction.id;
+      transactionsTemp.push({ ...transaction.data(), id });
+    });
+
+    userSeller.docs.forEach((transaction) => {
+      const id = transaction.id;
+      transactionsTemp.push({ ...transaction.data(), id });
+    });
+
+    if (transactionsTemp.length == 0) {
+      { throw new HttpException("", HttpStatus.NO_CONTENT) }
+    }
+
+    return transactionsTemp
+
   }
 }
