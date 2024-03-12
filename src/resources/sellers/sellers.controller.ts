@@ -3,6 +3,7 @@ import { SellersService } from './sellers.service';
 import { CreateProductDto } from '../products/dto/create-product.dto';
 import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { CreateTransactionDto } from '../transactions/dto/create-transaction.dto';
+import { UpdateTransactionDto } from '../transactions/dto/update-transaction.dto';
 
 
 @Controller('seller')
@@ -37,5 +38,10 @@ export class SellersController {
   @Get('/transactions')
   transactionsByUser(@Req() request: Request) {
     return this.sellersService.transactionsByUser(request["firebaseUser"]["uid"]);
+  }
+
+  @Patch('/transaction/:id')
+  updateTransaction(@Param('id') transactionId: string, @Body() updateTransactionDto: UpdateTransactionDto, @Req() request: Request) {
+    return this.sellersService.updateTransaction(transactionId, updateTransactionDto, request["firebaseUser"]["uid"]);
   }
 }

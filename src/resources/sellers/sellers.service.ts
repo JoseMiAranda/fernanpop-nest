@@ -5,10 +5,11 @@ import { UpdateProductDto } from '../products/dto/update-product.dto';
 import { TransactionsService } from '../transactions/transactions.service';
 import { CreateTransactionDto } from '../transactions/dto/create-transaction.dto';
 import * as admin from 'firebase-admin'
+import { UpdateTransactionDto } from '../transactions/dto/update-transaction.dto';
 
 @Injectable()
 export class SellersService {
-  
+
   constructor(private productsService: ProductsService, private transactionsService: TransactionsService) {}
 
   async createProduct(createProductDto: CreateProductDto, sellerId: string) {
@@ -46,8 +47,12 @@ export class SellersService {
     return this.transactionsService.create(product.id, sellerId, buyerId);
   }
 
-  async transactionsByUser(sellerId: any) {
+  async transactionsByUser(sellerId: string) {
     return await this.transactionsService.findBySeller(sellerId);
+  }
+
+  async updateTransaction(transactionId: string, updateTransactionDto: UpdateTransactionDto, userId: string) {
+    return await this.transactionsService.update(transactionId, userId, updateTransactionDto);
   }
 
   async getSellerById(idSeller: string) {

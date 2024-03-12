@@ -11,7 +11,7 @@ export class TransactionsService {
     let docRef = firebase.firestore().collection('transactions').doc();
 
     // Ambas fechas serán iguales en la creación
-    let creationDate = Date();
+    let creationDate = new Date().getTime();
     let updateDate = creationDate;
 
     let status = StatusTransaction.IN_PROCESS;
@@ -54,5 +54,27 @@ export class TransactionsService {
 
     return transactionsTemp
 
+  }
+
+  async update(id: string, userId: string, updateTransactionDto: UpdateTransactionDto) {
+    let docRef = firebase.firestore().collection('transactions').doc(id);
+    let findedDoc = await docRef.get();
+
+    // Encontramos el documento que coincida en el comprador o vendedor
+    if (!findedDoc.exists && (findedDoc.data()["sellerId"] == userId  || findedDoc.data()["buyerId"] === userId)) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    return docRef.update({ ...updateTransactionDto })
+      .then(() => {
+        let id = findedDoc.id;
+        // Actualizamos la hora de la transacción
+        const updateDate = new Date().getTime()
+        // Devolvemos el objeto encontrado con los cambios que hayamos especificado
+        return { ...findedDoc.data(), ...updateTransactionDto, id, updateDate }
+      })
+      .catch(() => {
+        throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
+      });
   }
 }
