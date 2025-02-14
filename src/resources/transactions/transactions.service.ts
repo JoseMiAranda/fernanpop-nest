@@ -1,77 +1,102 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import firebase from 'src/firebase/firebase';
-import { StatusTransaction } from './entities/status-transaction.entity';
+import { Product } from '../products/entities/product.entity';
+import { Transaction } from './entities/transaction.entity';
+import { Filter } from 'firebase-admin/firestore';
+import { TransactionStatus } from './entities/transaction-status';
 
 @Injectable()
 export class TransactionsService {
-  async create(productId: string, sellerId: string, buyerId: string) {
+  async create(productId: string, buyerId: string) {
 
-    let docRef = firebase.firestore().collection('transactions').doc();
+    const productRef = firebase.firestore().collection('transactions').doc(productId);
+
+    const foundProduct = await productRef.get();
+
+    if(!foundProduct.exists) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const product = foundProduct.data() as Product;
+
+    if(product.sellerId == buyerId) {
+      throw new HttpException("user-can't-buy-his-own-products", HttpStatus.FORBIDDEN);
+    }
 
     // Ambas fechas serán iguales en la creación
-    let creationDate = new Date().getTime();
-    let updateDate = creationDate;
-
-    let status = StatusTransaction.IN_PROCESS;
+    const creationDate = new Date().getTime();
+    const updateDate = creationDate;
 
     // Creamos la transacción
-    let transacion = { productId, sellerId, buyerId, creationDate, updateDate, status };
+    const newTransaction: Transaction = {
+      productId: productId,
+      sellerId: product.sellerId,
+      buyerId: buyerId,
+      creationDate: creationDate,
+      updateDate: updateDate,
+      status: TransactionStatus.IN_PROCESS,
+    }
 
-    return docRef.set(transacion)
+    return productRef.set(newTransaction)
       .then(() => {
         // Obtenemos el id del documento (llamado id como en todos los documentos devueltos)
-        let id = docRef.id;
-        return { ...transacion, id };
+        newTransaction.id = productRef.id;
+
+        return newTransaction;
       })
       .catch(() => { throw new HttpException("can't-create-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 
-  async findBySeller(sellerId: string) {
-    let docsRef = firebase.firestore().collection('transactions');
+  async findByUser(userId: string) {
 
-    // Obtenemos el registro compras / ventas del usuario
-    let userBuyer = await docsRef.where("sellerId", "==", sellerId).get();
-    let userSeller = await docsRef.where("buyerId", "==", sellerId).get()
-    // Obtenemos la data
+    const transactionsRef = firebase.firestore().collection('transactions')
+    .where(
+      Filter.or(
+        Filter.where('sellerId', '==', userId),
+        Filter.where('buyerId', '==', userId)
+      )
+    );
 
-    let transactionsTemp = [];
+    const transactions = await transactionsRef.get();
 
-    userBuyer.docs.forEach((transaction) => {
-      const id = transaction.id;
-      transactionsTemp.push({ ...transaction.data(), id });
+    const transactionsData: Transaction[] = transactions.docs.map((transaction) => {
+      const userTransaction = transaction.data() as Transaction;
+      userTransaction.id = transaction.id;
+      return userTransaction;
     });
 
-    userSeller.docs.forEach((transaction) => {
-      const id = transaction.id;
-      transactionsTemp.push({ ...transaction.data(), id });
-    });
-
-    if (transactionsTemp.length == 0) {
-      { throw new HttpException("", HttpStatus.NO_CONTENT) }
-    }
-
-    return transactionsTemp
-
+    return transactionsData;
   }
 
   async update(id: string, userId: string, updateTransactionDto: UpdateTransactionDto) {
-    let docRef = firebase.firestore().collection('transactions').doc(id);
-    let findedDoc = await docRef.get();
+    const transactionRef = firebase.firestore().collection('transactions').doc(id);
+    const foundTransaction = await transactionRef.get();
+
+    if(!foundTransaction.exists) {
+      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const transaction = foundTransaction.data() as Transaction;
 
     // Encontramos el documento que coincida en el comprador o vendedor
-    if (!findedDoc.exists && (findedDoc.data()["sellerId"] == userId  || findedDoc.data()["buyerId"] === userId)) {
+    if (!(transaction.sellerId == userId  || transaction.buyerId === userId)) {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    return docRef.update({ ...updateTransactionDto })
+    const updatedTransaction: Transaction = {
+      productId: transaction.productId,
+      buyerId: transaction.buyerId,
+      sellerId: transaction.sellerId,
+      creationDate: transaction.creationDate,
+      updateDate: new Date().getTime(),
+      status: updateTransactionDto.status,
+    }
+
+    return transactionRef.update({updatedTransaction})
       .then(() => {
-        let id = findedDoc.id;
-        // Actualizamos la hora de la transacción
-        const updateDate = new Date().getTime()
-        // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        return { ...findedDoc.data(), ...updateTransactionDto, id, updateDate }
+        updatedTransaction.id = transactionRef.id;
+        return updatedTransaction;
       })
       .catch(() => {
         throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
