@@ -5,9 +5,10 @@ import { ProductsModule } from './resources/products/products.module';
 import { ApiTokenCheck } from './common/middleware/api-token-check';
 import { ProductsController } from './resources/products/products.controller';
 import { TransactionsModule } from './resources/transactions/transactions.module';
+import { ImagesModule } from './resources/images/images.module';
 
 @Module({
-  imports: [ProductsModule, TransactionsModule],
+  imports: [ProductsModule, TransactionsModule, ImagesModule],
   controllers: [AppController],
   providers: [AppService],
 })
