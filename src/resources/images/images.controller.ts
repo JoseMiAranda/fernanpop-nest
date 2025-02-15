@@ -16,6 +16,6 @@ export class ImagesController {
     }),
   ) file: Express.Multer.File,
   ) {
-    return { message: 'Archivo subido exitosamente', fileName: file.originalname };
+    return this.imagesService.uploadFile(file);
   }
 }

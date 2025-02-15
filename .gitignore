@@ -1,4 +1,7 @@
-#firebase
+# env
+.env
+
+# firebase
 credentials.json
 
 # compiled output
