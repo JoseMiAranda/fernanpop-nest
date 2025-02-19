@@ -15,14 +15,14 @@ export class ProductsController {
     return this.productsService.find(queryParams);
   }
 
-  @Get(':id')
-  findById(@Param('id') id: string){
-    return this.productsService.findById(id);
-  }
-
   @Get('/seller')
   findBySeller(@Req() request: Request){
     return this.productsService.findBySeller(request["firebaseUser"]["uid"]);
+  }
+
+  @Get(':id')
+  findById(@Param('id') id: string){
+    return this.productsService.findById(id);
   }
 
   @Post()
