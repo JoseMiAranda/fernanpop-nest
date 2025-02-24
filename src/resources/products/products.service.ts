@@ -16,7 +16,7 @@ export class ProductsService {
 
     const productRef = firebase.firestore().collection('products').doc();
 
-    const { title, desc, price, img } = createProductDto; // TODO: pasar a images
+    const { title, desc, price, images } = createProductDto;
 
     // Ambas fechas serán iguales en la creación
     const creationDate = new Date().getTime();
@@ -27,7 +27,7 @@ export class ProductsService {
       title: title,
       desc: desc,
       price: price,
-      images: [], // TODO
+      images: images,
       status: [],
       createdAt: creationDate,
       updatedAt: updateDate,
