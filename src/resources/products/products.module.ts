@@ -15,7 +15,8 @@ export class ProductsModule {
       .forRoutes(
         { path: 'products/seller', method: RequestMethod.GET },
         { path: 'products', method: RequestMethod.POST },
-        { path: 'products/:id', method: RequestMethod.PATCH }
+        { path: 'products/:id', method: RequestMethod.PATCH },
+        { path: 'products/:id', method: RequestMethod.DELETE },
       );
   }
 }

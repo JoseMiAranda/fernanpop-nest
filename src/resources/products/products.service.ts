@@ -4,6 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import firebase from 'src/firebase/firebase';
 import { Product } from './entities/product.entity';
 import { FilterProductDto } from './dto/filter-product.dto';
+import { ProductStatus } from './entities/produc-status.entity';
 
 @Injectable()
 export class ProductsService {
@@ -82,7 +83,7 @@ export class ProductsService {
       });
   }
 
-  async remove(idProduct: string, sellerId: string) {
+  async delete(idProduct: string, sellerId: string) {
     const productRef = firebase.firestore().collection('products').doc(idProduct);
     const foundProduct = await productRef.get();
 
@@ -96,9 +97,13 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    return productRef.delete()
+    productToDelete.status.push(ProductStatus.SOLD);
+    productToDelete.updatedAt = new Date().getTime();
+
+    return productRef.update({...productToDelete})
       .then(() => {
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
+        productToDelete.id = idProduct;
         return productToDelete;
       })
       .catch(() => { throw new HttpException("can't-delete-product", HttpStatus.INTERNAL_SERVER_ERROR) });

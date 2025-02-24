@@ -34,4 +34,9 @@ export class ProductsController {
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @Req() request: Request) {
     return this.productsService.update(id, request["firebaseUser"]["uid"], updateProductDto);
   }
+
+  @Delete(':id')
+  delete(@Param('id') id: string, @Req() request: Request) {
+    return this.productsService.delete(id, request["firebaseUser"]["uid"]);
+  }
 }
