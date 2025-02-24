@@ -139,8 +139,10 @@ export class ProductsService {
     });
 
     let filteredDocs = productsData.filter((product) => {
-      const { title, price } = product;
-      return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) && price >= price_min && price <= price_max;
+      const { title, price, status } = product;
+      return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
+             && price >= price_min && price <= price_max
+             && !status.includes(ProductStatus.SOLD);
     });
 
     // Escogemos los pertenecientes a la página
@@ -166,10 +168,14 @@ export class ProductsService {
     const foundDoc = await docsRef.get();
 
     if (!foundDoc.exists) {
-      { throw new HttpException("product-not-found", HttpStatus.NOT_FOUND) }
+      throw new HttpException("product-not-found", HttpStatus.NOT_FOUND) 
     }
 
     const product = foundDoc.data() as Product;
+
+    if(product.status.includes(ProductStatus.SOLD)) {
+      throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
+    }
 
     product.id = foundDoc.id;
 
