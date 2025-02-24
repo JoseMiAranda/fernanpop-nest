@@ -6,7 +6,7 @@ export class Product {
     title: string;
     desc: string;
     price: number;
-    img: string;
+    images: string[];
     status: ProductStatus[];
     createdAt: number;
     updatedAt: number;

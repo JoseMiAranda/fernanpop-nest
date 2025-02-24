@@ -2,6 +2,7 @@ import { IsNotEmpty, IsNumber, IsString, IsUUID, Max, Min } from "class-validato
 
 export class CreateProductDto {
 
+    // TODO
     @IsString()
     @IsNotEmpty()
     img: string

@@ -1,14 +1,15 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateProductDto } from './create-product.dto';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ProductStatus } from '../entities/produc-status.entity';
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {
     
     @IsOptional()
-    @IsString()
+    @IsArray()
+    @IsString({ each: true }) 
     @IsNotEmpty()
-    img?: string
+    images?: string[]
 
     @IsOptional()
     @IsString()
@@ -28,5 +29,6 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
 
     @IsOptional()
     @IsArray()
+    @IsEnum(ProductStatus, { each: true })
     status?: ProductStatus[]
 }

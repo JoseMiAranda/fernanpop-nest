@@ -16,7 +16,7 @@ export class ProductsService {
 
     const productRef = firebase.firestore().collection('products').doc();
 
-    const { title, desc, price, img } = createProductDto;
+    const { title, desc, price, img } = createProductDto; // TODO: pasar a images
 
     // Ambas fechas serán iguales en la creación
     const creationDate = new Date().getTime();
@@ -27,7 +27,7 @@ export class ProductsService {
       title: title,
       desc: desc,
       price: price,
-      img: img,
+      images: [], // TODO
       status: [],
       createdAt: creationDate,
       updatedAt: updateDate,
@@ -59,22 +59,22 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const { title, desc, price, img, status } = updateProductDto;
+    const { title, desc, price, images, status } = updateProductDto;
 
     const updatedProduct: Product = {
-      id: id,
       sellerId: sellerId,
       title: title ?? productToUpdate.title,
       desc: desc ?? productToUpdate.desc,
       price: price ?? productToUpdate.price,
-      img: img ?? productToUpdate.img,
+      images: images ?? productToUpdate.images,
       status: status ?? productToUpdate.status,
       createdAt: productToUpdate.createdAt,
       updatedAt: new Date().getTime(),
     };
 
-    return productRef.update({ updatedProduct })
+    return productRef.update({...updatedProduct})
       .then(() => {
+        updatedProduct.id = id;
         return updatedProduct;
       })
       .catch(() => {
