@@ -199,14 +199,18 @@ export class ProductsService {
       return [];
     }
 
-    const productsData: Product[] = foundProducts.docs.map((firebaseProductDoc) => {
+    const notSoldOrDeletedProducts: Product[] = [];
+
+    foundProducts.docs.forEach((firebaseProductDoc) => {
       const firebaseProduct = firebaseProductDoc.data() as FirebaseProductSchema;
       firebaseProduct.id = firebaseProductDoc.id;
       const product = firebaseProductSchemaToProduct(firebaseProduct);
-      return product;
+      if(!(product.status.includes(ProductStatus.SOLD) || product.status.includes(ProductStatus.DELETED))) {
+        notSoldOrDeletedProducts.push(product);
+      }
     });
 
-    return productsData.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    return notSoldOrDeletedProducts.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
   // Utils
