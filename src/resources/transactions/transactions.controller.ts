@@ -22,9 +22,9 @@ export class TransactionsController {
   //   return this.transactionsService.update(transactionId, request["firebaseUser"]["uid"], updateTransactionDto);
   // }
 
-  @Delete(':id')
+  @Patch(':id/sell')
   @HttpCode(HttpStatus.CREATED)
-  delete(@Param('id') productId: string, @Req() request: Request) {
+  sell(@Param('id') productId: string, @Req() request: Request) {
     return this.transactionsService.sell(productId, request["firebaseUser"]["uid"]);
   }
 }
