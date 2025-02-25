@@ -178,7 +178,7 @@ export class ProductsService {
 
     const firebaseProduct = foundDoc.data() as FirebaseProductSchema;
 
-    if(!(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED))) {
+    if(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED)) {
       throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
     }
 
