@@ -5,7 +5,9 @@ export class Transaction {
     productId: string;
     sellerId: string;
     buyerId: string;
-    creationDate: number;
-    updateDate: number;
+    price: number;
+    image: string;
     status: TransactionStatus;
+    createdAt: Date;
+    updatedAt: Date;
 }

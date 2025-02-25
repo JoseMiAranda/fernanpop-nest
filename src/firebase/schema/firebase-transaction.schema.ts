@@ -7,7 +7,7 @@ export class FirebaseTransactionSchema {
     buyerId: string;
     price: number;
     image: string;
-    status: string[];
+    status: string;
     createdAt: admin.firestore.Timestamp;
     updatedAt: admin.firestore.Timestamp;
 }

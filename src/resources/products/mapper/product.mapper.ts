@@ -6,7 +6,6 @@ import { ProductStatus } from "src/resources/products/entities/produc-status.ent
 const validProductStatuses: string[] = [ProductStatus.RESERVED, ProductStatus.SOLD, ProductStatus.DELETED];
 
 export function firebaseProductSchemaToProduct(firebaseProductSchema: FirebaseProductSchema): Product {
-    console.log(firebaseProductSchema);
     const product: Product = {
         id: firebaseProductSchema.id,
         sellerId: firebaseProductSchema.sellerId,
