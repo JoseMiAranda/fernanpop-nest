@@ -90,37 +90,37 @@ export class TransactionsService {
     return transactions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
-  async update(id: string, userId: string, updateTransactionDto: UpdateTransactionDto) {
-    const transactionRef = firebase.firestore().collection('transactions').doc(id);
-    const foundTransaction = await transactionRef.get();
+  // async update(id: string, userId: string, updateTransactionDto: UpdateTransactionDto) {
+  //   const transactionRef = firebase.firestore().collection('transactions').doc(id);
+  //   const foundTransaction = await transactionRef.get();
 
-    if(!foundTransaction.exists) {
-      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
-    }
+  //   if(!foundTransaction.exists) {
+  //     throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+  //   }
 
-    const transaction = foundTransaction.data() as Transaction;
+  //   const transaction = foundTransaction.data() as Transaction;
 
-    // Encontramos el documento que coincida en el comprador o vendedor
-    if (!(transaction.sellerId == userId  || transaction.buyerId === userId)) {
-      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
-    }
+  //   // Encontramos el documento que coincida en el comprador o vendedor
+  //   if (!(transaction.sellerId == userId  || transaction.buyerId === userId)) {
+  //     throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+  //   }
 
-    const updatedTransaction: Transaction = {
-      productId: transaction.productId,
-      buyerId: transaction.buyerId,
-      sellerId: transaction.sellerId,
-      creationDate: transaction.creationDate,
-      updateDate: new Date().getTime(),
-      status: updateTransactionDto.status,
-    }
+  //   const updatedTransaction: Transaction = {
+  //     productId: transaction.productId,
+  //     buyerId: transaction.buyerId,
+  //     sellerId: transaction.sellerId,
+  //     creationDate: transaction.creationDate,
+  //     updateDate: new Date().getTime(),
+  //     status: updateTransactionDto.status,
+  //   }
 
-    return transactionRef.update({updatedTransaction})
-      .then(() => {
-        updatedTransaction.id = transactionRef.id;
-        return updatedTransaction;
-      })
-      .catch(() => {
-        throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
-      });
-  }
+  //   return transactionRef.update({updatedTransaction})
+  //     .then(() => {
+  //       updatedTransaction.id = transactionRef.id;
+  //       return updatedTransaction;
+  //     })
+  //     .catch(() => {
+  //       throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
+  //     });
+  // }
 }
