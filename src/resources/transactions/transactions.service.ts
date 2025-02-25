@@ -1,3 +1,4 @@
+import * as admin from 'firebase-admin';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import firebase from 'src/firebase/firebase';
@@ -5,12 +6,18 @@ import { Product } from '../products/entities/product.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Filter } from 'firebase-admin/firestore';
 import { TransactionStatus } from './entities/transaction-status';
+import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
+import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactionSchema } from './mapper/transaction.mapper';
+import { ProductStatus } from '../products/entities/produc-status.entity';
 
 @Injectable()
 export class TransactionsService {
   async create(productId: string, buyerId: string) {
+    //* Debe de cumplir lo siguiente:
+    //* 1.- Crear una transacción
+    //* 2.- Actualizar el producto
 
-    const productRef = firebase.firestore().collection('transactions').doc(productId);
+    const productRef = firebase.firestore().collection('products').doc(productId);
 
     const foundProduct = await productRef.get();
 
@@ -18,34 +25,46 @@ export class TransactionsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const product = foundProduct.data() as Product;
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
 
-    if(product.sellerId == buyerId) {
+    if(firebaseProduct.sellerId == buyerId) {
       throw new HttpException("user-can't-buy-his-own-products", HttpStatus.FORBIDDEN);
     }
 
-    // Ambas fechas serán iguales en la creación
-    const creationDate = new Date().getTime();
-    const updateDate = creationDate;
+    const createdAt = new Date();
 
     // Creamos la transacción
+    const transactionRef = firebase.firestore().collection('transactions').doc();
+    
     const newTransaction: Transaction = {
-      productId: productId,
-      sellerId: product.sellerId,
+      productId: productRef.id,
+      sellerId: firebaseProduct.sellerId,
       buyerId: buyerId,
-      creationDate: creationDate,
-      updateDate: updateDate,
+      price: firebaseProduct.price,
+      image: firebaseProduct.images[0],
       status: TransactionStatus.IN_PROCESS,
+      createdAt: createdAt,
+      updatedAt: createdAt,
     }
 
-    return productRef.set(newTransaction)
-      .then(() => {
-        // Obtenemos el id del documento (llamado id como en todos los documentos devueltos)
-        newTransaction.id = productRef.id;
+    const firebaseUpdatedProduct: FirebaseProductSchema = {
+      ...firebaseProduct,
+      status: [ProductStatus.RESERVED],
+      updatedAt: admin.firestore.Timestamp.fromDate(createdAt),
+    }
 
-        return newTransaction;
-      })
-      .catch(() => { throw new HttpException("can't-create-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
+    const firebaseTransaction = transactionToFirebaseTransactionSchema(newTransaction);
+
+    // Ejecutamos la creacion de la transaccion y la modificación del producto en una operación atómica
+    const batch = firebase.firestore().batch();
+    batch.create(transactionRef, firebaseTransaction);                            
+    batch.update(productRef, {...firebaseUpdatedProduct});
+    
+    return batch.commit().then(() => {
+      newTransaction.id = transactionRef.id;
+      return newTransaction;
+    })
+    .catch(() => { throw new HttpException("can't-create-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 
   async findByUser(userId: string) {
