@@ -39,6 +39,7 @@ export class TransactionsService {
       productId: productRef.id,
       sellerId: firebaseProduct.sellerId,
       buyerId: buyerId,
+      title: firebaseProduct.title,
       price: firebaseProduct.price,
       image: firebaseProduct.images[0],
       status: TransactionStatus.IN_PROCESS,

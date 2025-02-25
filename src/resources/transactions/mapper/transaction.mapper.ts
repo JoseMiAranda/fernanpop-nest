@@ -11,6 +11,7 @@ export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: Fi
        productId: firebaseProductSchema.productId,
        sellerId: firebaseProductSchema.sellerId,
        buyerId: firebaseProductSchema.buyerId,
+       title: firebaseProductSchema.title,
        price: firebaseProductSchema.price,
        image: firebaseProductSchema.image,
        status: validTransactionStatuses.includes(firebaseProductSchema.status) 
@@ -29,6 +30,7 @@ export function transactionToFirebaseTransactionSchema(transaction: Transaction)
         productId: transaction.productId,
         sellerId: transaction.sellerId,
         buyerId: transaction.buyerId,
+        title: transaction.title,
         price: transaction.price,
         image: transaction.image,
         status: transaction.status,

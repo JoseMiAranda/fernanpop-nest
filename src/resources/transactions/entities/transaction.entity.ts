@@ -5,6 +5,7 @@ export class Transaction {
     productId: string;
     sellerId: string;
     buyerId: string;
+    title: string;
     price: number;
     image: string;
     status: TransactionStatus;
