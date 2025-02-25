@@ -1,8 +1,6 @@
 import * as admin from 'firebase-admin';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import firebase from 'src/firebase/firebase';
-import { Product } from '../products/entities/product.entity';
 import { Transaction } from './entities/transaction.entity';
 import { Filter } from 'firebase-admin/firestore';
 import { TransactionStatus } from './entities/transaction-status';
