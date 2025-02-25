@@ -126,7 +126,7 @@ export class TransactionsService {
 
   async sell(id: string, user: string) {
     //* Debe de cumplir lo siguiente:
-    //* 1.- Actualizar(eliminar) la transacción
+    //* 1.- Actualizar la transacción
     //* 2.- Actualizar el producto
 
     const transactionRef = firebase.firestore().collection('transactions').doc(id);  
@@ -179,5 +179,67 @@ export class TransactionsService {
     })
     .catch(() => { throw new HttpException("can'-update-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
     
+  }
+
+  async cancel(id: string, user: string) {
+    //* Debe de cumplir lo siguiente:
+    //* 1.- Actualizar la transacción
+    //* 2.- Actualizar el producto
+
+    const transactionRef = firebase.firestore().collection('transactions').doc(id);  
+
+    const foundTransaction = await transactionRef.get();
+
+    if(!foundTransaction.exists) {
+      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const firebaseTransaction = foundTransaction.data() as FirebaseTransactionSchema;
+
+    if(firebaseTransaction.sellerId != user) {
+      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const productRef = firebase.firestore().collection('products').doc(firebaseTransaction.productId);
+
+    const foundProduct = await productRef.get();
+
+    if(!foundProduct.exists) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
+
+    if(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED)){
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const updatedAt = new Date();
+
+    const firebaseCanceledTransaction: FirebaseTransactionSchema = {
+      ...firebaseTransaction,
+      status: TransactionStatus.CANCELED,
+      updatedAt: admin.firestore.Timestamp.fromDate(updatedAt),
+    }
+
+    const status = firebaseProduct.status.filter((status) => status !== ProductStatus.RESERVED);
+
+    const firebaseUpdatedProduct: FirebaseProductSchema = {
+      ...firebaseProduct,
+      status: status,
+      updatedAt: admin.firestore.Timestamp.fromDate(updatedAt),
+    }
+
+    // Ejecutamos la actualización del producto y de la transacción
+    const batch = firebase.firestore().batch();
+    batch.update(transactionRef, {...firebaseCanceledTransaction});                            
+    batch.update(productRef, {...firebaseUpdatedProduct});
+    
+    return batch.commit().then(() => {
+      const canceledTransaction = firebaseTransactionSchemaToTransaction(firebaseCanceledTransaction);
+      canceledTransaction.id = transactionRef.id;
+      return canceledTransaction;
+    })
+    .catch(() => { throw new HttpException("can'-update-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 }

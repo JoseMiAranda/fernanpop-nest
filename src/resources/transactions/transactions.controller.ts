@@ -23,8 +23,12 @@ export class TransactionsController {
   // }
 
   @Patch(':id/sell')
-  @HttpCode(HttpStatus.CREATED)
-  sell(@Param('id') productId: string, @Req() request: Request) {
-    return this.transactionsService.sell(productId, request["firebaseUser"]["uid"]);
+  sell(@Param('id') id: string, @Req() request: Request) {
+    return this.transactionsService.sell(id, request["firebaseUser"]["uid"]);
+  }
+
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string, @Req() request: Request) {
+    return this.transactionsService.cancel(id, request["firebaseUser"]["uid"]);
   }
 }
