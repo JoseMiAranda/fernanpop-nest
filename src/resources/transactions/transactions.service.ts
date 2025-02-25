@@ -153,6 +153,10 @@ export class TransactionsService {
 
     const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
 
+    if(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED)){
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
     const updatedAt = new Date();
 
     const firebaseSoldTransaction: FirebaseTransactionSchema = {
