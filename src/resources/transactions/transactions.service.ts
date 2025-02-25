@@ -9,6 +9,7 @@ import { TransactionStatus } from './entities/transaction-status';
 import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
 import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactionSchema } from './mapper/transaction.mapper';
 import { ProductStatus } from '../products/entities/produc-status.entity';
+import { FirebaseTransactionSchema } from 'src/firebase/schema/firebase-transaction.schema';
 
 @Injectable()
 export class TransactionsService {
@@ -77,15 +78,16 @@ export class TransactionsService {
       )
     );
 
-    const transactions = await transactionsRef.get();
+    const transactionsDocs = (await transactionsRef.get()).docs;
 
-    const transactionsData: Transaction[] = transactions.docs.map((transaction) => {
-      const userTransaction = transaction.data() as Transaction;
-      userTransaction.id = transaction.id;
-      return userTransaction;
+    const transactions: Transaction[] = transactionsDocs.map((firebaseTransactionDoc) => {
+      const firebaseTransaction = firebaseTransactionDoc.data() as FirebaseTransactionSchema;
+      firebaseTransaction.id = firebaseTransactionDoc.id;
+      const transaction = firebaseTransactionSchemaToTransaction(firebaseTransaction);
+      return transaction;
     });
 
-    return transactionsData;
+    return transactions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
   async update(id: string, userId: string, updateTransactionDto: UpdateTransactionDto) {
