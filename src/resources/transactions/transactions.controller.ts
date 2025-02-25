@@ -17,11 +17,6 @@ export class TransactionsController {
     return this.transactionsService.create(productId, request["firebaseUser"]["uid"]);
   }
 
-  // @Patch(':id')
-  // updateTransaction(@Param('id') transactionId: string, @Body() updateTransactionDto: UpdateTransactionDto, @Req() request: Request) {
-  //   return this.transactionsService.update(transactionId, request["firebaseUser"]["uid"], updateTransactionDto);
-  // }
-
   @Patch(':id/sell')
   sell(@Param('id') id: string, @Req() request: Request) {
     return this.transactionsService.sell(id, request["firebaseUser"]["uid"]);
