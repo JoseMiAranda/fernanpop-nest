@@ -100,7 +100,7 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    firebaseProduct.status.push(ProductStatus.SOLD);
+    firebaseProduct.status.push(ProductStatus.DELETED);
     firebaseProduct.updatedAt = admin.firestore.Timestamp.now();
 
     return productRef.update({...firebaseProduct})
@@ -147,7 +147,7 @@ export class ProductsService {
       const { title, price, status } = product;
       return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
              && price >= price_min && price <= price_max
-             && !status.includes(ProductStatus.SOLD);
+             && !(status.includes(ProductStatus.SOLD) || status.includes(ProductStatus.DELETED));
     });
 
     // Escogemos los pertenecientes a la página
@@ -178,7 +178,7 @@ export class ProductsService {
 
     const firebaseProduct = foundDoc.data() as FirebaseProductSchema;
 
-    if(firebaseProduct.status.includes(ProductStatus.SOLD)) {
+    if(!(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED))) {
       throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
     }
 
