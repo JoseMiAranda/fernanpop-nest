@@ -1,3 +1,4 @@
+import * as admin from 'firebase-admin'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -5,6 +6,8 @@ import firebase from 'src/firebase/firebase';
 import { Product } from './entities/product.entity';
 import { FilterProductDto } from './dto/filter-product.dto';
 import { ProductStatus } from './entities/produc-status.entity';
+import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from './mapper/product.mapper';
+import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
 
 @Injectable()
 export class ProductsService {
@@ -20,8 +23,8 @@ export class ProductsService {
     const { title, desc, price, images } = createProductDto;
 
     // Ambas fechas serán iguales en la creación
-    const creationDate = new Date().getTime();
-    const updateDate = creationDate;
+    const createdAt = new Date();
+    const updatedAt = createdAt;
 
     const newProduct: Product = {
       sellerId: sellerId,
@@ -30,17 +33,16 @@ export class ProductsService {
       price: price,
       images: images,
       status: [],
-      createdAt: creationDate,
-      updatedAt: updateDate,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     };
 
-    return productRef.set(newProduct)
+    const firebaseProduct = productToFirebaseProductSchema(newProduct);
+
+    return productRef.set(firebaseProduct)
       .then(() => {
         // Obtenemos el id del documento (llamado id como en todos los documentos devueltos)
-        const id = productRef.id;
-
-        newProduct.id = id;
-
+        newProduct.id = productRef.id;
         return newProduct;
       })
       .catch(() => { throw new HttpException("can't-create-product", HttpStatus.INTERNAL_SERVER_ERROR) });
@@ -54,28 +56,29 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const productToUpdate = foundProduct.data() as Product;
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
 
-    if (productToUpdate.sellerId !== sellerId) {
+    if (firebaseProduct.sellerId !== sellerId) {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
     const { title, desc, price, images, status } = updateProductDto;
 
-    const updatedProduct: Product = {
+    const firebaseUpdatedProduct: FirebaseProductSchema = {
       sellerId: sellerId,
-      title: title ?? productToUpdate.title,
-      desc: desc ?? productToUpdate.desc,
-      price: price ?? productToUpdate.price,
-      images: images ?? productToUpdate.images,
-      status: status ?? productToUpdate.status,
-      createdAt: productToUpdate.createdAt,
-      updatedAt: new Date().getTime(),
-    };
+      title: title ?? firebaseProduct.title,
+      desc: desc ?? firebaseProduct.desc,
+      price: price ?? firebaseProduct.price,
+      images: images ?? firebaseProduct.images,
+      status: status ?? firebaseProduct.status,
+      createdAt: firebaseProduct.createdAt,
+      updatedAt: admin.firestore.Timestamp.now(),
+    }
 
-    return productRef.update({...updatedProduct})
+    return productRef.update({...firebaseUpdatedProduct})
       .then(() => {
-        updatedProduct.id = id;
+        firebaseUpdatedProduct.id = productRef.id;
+        const updatedProduct: Product = firebaseProductSchemaToProduct(firebaseUpdatedProduct);
         return updatedProduct;
       })
       .catch(() => {
@@ -91,20 +94,21 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const productToDelete = foundProduct.data() as Product;
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
 
-    if (productToDelete.sellerId !== sellerId) {
+    if (firebaseProduct.sellerId !== sellerId) {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    productToDelete.status.push(ProductStatus.SOLD);
-    productToDelete.updatedAt = new Date().getTime();
+    firebaseProduct.status.push(ProductStatus.SOLD);
+    firebaseProduct.updatedAt = admin.firestore.Timestamp.now();
 
-    return productRef.update({...productToDelete})
+    return productRef.update({...firebaseProduct})
       .then(() => {
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        productToDelete.id = idProduct;
-        return productToDelete;
+        firebaseProduct.id = productRef.id;
+        const deletedProduct: Product = firebaseProductSchemaToProduct(firebaseProduct);
+        return deletedProduct;
       })
       .catch(() => { throw new HttpException("can't-delete-product", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
@@ -132,13 +136,14 @@ export class ProductsService {
       return response;
     }
 
-    const productsData: Product[] = foundProducts.docs.map((product) => {
-      const userProduct = product.data() as Product;
-      userProduct.id = product.id;
-      return userProduct;
+    const products: Product[] = foundProducts.docs.map((firebaseProductDoc) => {
+      const firebaseProduct = firebaseProductDoc.data() as FirebaseProductSchema;
+      firebaseProduct.id = firebaseProductDoc.id;
+      const product = firebaseProductSchemaToProduct(firebaseProduct);
+      return product;
     });
 
-    let filteredDocs = productsData.filter((product) => {
+    let filteredDocs = products.filter((product) => {
       const { title, price, status } = product;
       return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
              && price >= price_min && price <= price_max
@@ -171,13 +176,15 @@ export class ProductsService {
       throw new HttpException("product-not-found", HttpStatus.NOT_FOUND) 
     }
 
-    const product = foundDoc.data() as Product;
+    const firebaseProduct = foundDoc.data() as FirebaseProductSchema;
 
-    if(product.status.includes(ProductStatus.SOLD)) {
+    if(firebaseProduct.status.includes(ProductStatus.SOLD)) {
       throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
     }
 
-    product.id = foundDoc.id;
+    firebaseProduct.id = foundDoc.id;
+
+    const product = firebaseProductSchemaToProduct(firebaseProduct);
 
     return product;
   }
@@ -192,13 +199,14 @@ export class ProductsService {
       return [];
     }
 
-    const productsData: Product[] = foundProducts.docs.map((product) => {
-      const userProduct = product.data() as Product;
-      userProduct.id = product.id;
-      return userProduct;
+    const productsData: Product[] = foundProducts.docs.map((firebaseProductDoc) => {
+      const firebaseProduct = firebaseProductDoc.data() as FirebaseProductSchema;
+      firebaseProduct.id = firebaseProductDoc.id;
+      const product = firebaseProductSchemaToProduct(firebaseProduct);
+      return product;
     });
 
-    return productsData;
+    return productsData.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
   // Utils

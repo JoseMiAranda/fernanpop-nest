@@ -8,6 +8,6 @@ export class Product {
     price: number;
     images: string[];
     status: ProductStatus[];
-    createdAt: number;
-    updatedAt: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
