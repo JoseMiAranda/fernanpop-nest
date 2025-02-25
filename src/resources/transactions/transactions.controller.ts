@@ -21,4 +21,10 @@ export class TransactionsController {
   // updateTransaction(@Param('id') transactionId: string, @Body() updateTransactionDto: UpdateTransactionDto, @Req() request: Request) {
   //   return this.transactionsService.update(transactionId, request["firebaseUser"]["uid"], updateTransactionDto);
   // }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.CREATED)
+  delete(@Param('id') productId: string, @Req() request: Request) {
+    return this.transactionsService.sell(productId, request["firebaseUser"]["uid"]);
+  }
 }

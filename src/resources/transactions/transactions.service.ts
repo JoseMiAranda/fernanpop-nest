@@ -123,4 +123,61 @@ export class TransactionsService {
   //       throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
   //     });
   // }
+
+  async sell(id: string, user: string) {
+    //* Debe de cumplir lo siguiente:
+    //* 1.- Actualizar(eliminar) la transacción
+    //* 2.- Actualizar el producto
+
+    const transactionRef = firebase.firestore().collection('transactions').doc(id);  
+
+    const foundTransaction = await transactionRef.get();
+
+    if(!foundTransaction.exists) {
+      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const firebaseTransaction = foundTransaction.data() as FirebaseTransactionSchema;
+
+    if(firebaseTransaction.buyerId != user) {
+      throw new HttpException('transaction-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const productRef = firebase.firestore().collection('products').doc(firebaseTransaction.productId);
+
+    const foundProduct = await productRef.get();
+
+    if(!foundProduct.exists) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
+
+    const updatedAt = new Date();
+
+    const firebaseSoldTransaction: FirebaseTransactionSchema = {
+      ...firebaseTransaction,
+      status: TransactionStatus.RECEIVED,
+      updatedAt: admin.firestore.Timestamp.fromDate(updatedAt),
+    }
+
+    const firebaseUpdatedProduct: FirebaseProductSchema = {
+      ...firebaseProduct,
+      status: [...firebaseProduct.status, ProductStatus.RESERVED],
+      updatedAt: admin.firestore.Timestamp.fromDate(updatedAt),
+    }
+
+    // Ejecutamos la actualización del producto y de la transacción
+    const batch = firebase.firestore().batch();
+    batch.update(transactionRef, {...firebaseSoldTransaction});                            
+    batch.update(productRef, {...firebaseUpdatedProduct});
+    
+    return batch.commit().then(() => {
+      const soldTransaction = firebaseTransactionSchemaToTransaction(firebaseSoldTransaction);
+      soldTransaction.id = transactionRef.id;
+      return soldTransaction;
+    })
+    .catch(() => { throw new HttpException("can'-update-transaction", HttpStatus.INTERNAL_SERVER_ERROR) });
+    
+  }
 }
