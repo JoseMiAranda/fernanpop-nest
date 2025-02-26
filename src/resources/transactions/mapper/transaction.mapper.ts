@@ -7,7 +7,6 @@ const validTransactionStatuses: string[] = [TransactionStatus.IN_PROCESS, Transa
 
 export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: FirebaseTransactionSchema): Transaction {
     const transaction: Transaction = {
-       id: firebaseProductSchema.id,
        productId: firebaseProductSchema.productId,
        sellerId: firebaseProductSchema.sellerId,
        buyerId: firebaseProductSchema.buyerId,
@@ -26,7 +25,6 @@ export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: Fi
 
 export function transactionToFirebaseTransactionSchema(transaction: Transaction): FirebaseTransactionSchema {
     const transactionSchema: FirebaseTransactionSchema = {
-        id: transaction.id,
         productId: transaction.productId,
         sellerId: transaction.sellerId,
         buyerId: transaction.buyerId,

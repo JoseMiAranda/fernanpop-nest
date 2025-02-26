@@ -7,7 +7,6 @@ const validProductStatuses: string[] = [ProductStatus.RESERVED, ProductStatus.SO
 
 export function firebaseProductSchemaToProduct(firebaseProductSchema: FirebaseProductSchema): Product {
     const product: Product = {
-        id: firebaseProductSchema.id,
         sellerId: firebaseProductSchema.sellerId,
         title: firebaseProductSchema.title,
         desc: firebaseProductSchema.desc,
