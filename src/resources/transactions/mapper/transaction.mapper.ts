@@ -7,6 +7,7 @@ const validTransactionStatuses: string[] = [TransactionStatus.IN_PROCESS, Transa
 
 export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: FirebaseTransactionSchema): Transaction {
     const transaction: Transaction = {
+       id: firebaseProductSchema.id,
        productId: firebaseProductSchema.productId,
        sellerId: firebaseProductSchema.sellerId,
        buyerId: firebaseProductSchema.buyerId,
