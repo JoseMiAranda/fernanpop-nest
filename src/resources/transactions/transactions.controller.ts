@@ -16,9 +16,9 @@ export class TransactionsController {
     return this.transactionsService.create(productId, request["firebaseUser"]["uid"]);
   }
 
-  @Patch(':id/sell')
-  sell(@Param('id') id: string, @Req() request: Request) {
-    return this.transactionsService.sell(id, request["firebaseUser"]["uid"]);
+  @Patch(':id/accept')
+  accept(@Param('id') id: string, @Req() request: Request) {
+    return this.transactionsService.accept(id, request["firebaseUser"]["uid"]);
   }
 
   @Patch(':id/cancel')

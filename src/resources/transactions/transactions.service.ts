@@ -91,7 +91,7 @@ export class TransactionsService {
     return transactions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
-  async sell(id: string, user: string) {
+  async accept(id: string, user: string) {
     //* Debe de cumplir lo siguiente:
     //* 1.- Actualizar la transacción
     //* 2.- Actualizar el producto
