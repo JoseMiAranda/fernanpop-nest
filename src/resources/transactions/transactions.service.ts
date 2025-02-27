@@ -34,11 +34,13 @@ export class TransactionsService {
 
     // Creamos la transacción
     const transactionRef = firebase.firestore().collection('transactions').doc();
-    
+    const sellerEmail = (await admin.auth().getUser(firebaseProduct.sellerId)).email!;
+
     const newTransaction: Transaction = {
       productId: productRef.id,
       sellerId: firebaseProduct.sellerId,
       buyerId: buyerId,
+      sellerEmail: sellerEmail,
       title: firebaseProduct.title,
       price: firebaseProduct.price,
       image: firebaseProduct.images[0],

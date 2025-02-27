@@ -5,6 +5,7 @@ export class FirebaseTransactionSchema {
     productId: string;
     sellerId: string;
     buyerId: string;
+    sellerEmail: string; 
     title: string
     price: number;
     image: string;
