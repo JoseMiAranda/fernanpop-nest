@@ -1,183 +1,222 @@
+import * as admin from 'firebase-admin'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import firebase from 'src/firebase/firebase';
+import { Product } from './entities/product.entity';
+import { FilterProductDto } from './dto/filter-product.dto';
+import { ProductStatus } from './entities/produc-status.entity';
+import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from './mapper/product.mapper';
+import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
 
 @Injectable()
 export class ProductsService {
-  
+
   limit = 10;
 
   constructor() { }
-  
-  // CREATE
+
   async create(createProductDto: CreateProductDto, sellerId: string) {
 
-    let docRef = firebase.firestore().collection('products').doc();
+    const productRef = firebase.firestore().collection('products').doc();
 
-    return docRef.set({ ...createProductDto, sellerId })
+    const { title, desc, price, images } = createProductDto;
+
+    // Ambas fechas serán iguales en la creación
+    const createdAt = new Date();
+    const updatedAt = createdAt;
+
+    const newProduct: Product = {
+      sellerId: sellerId,
+      title: title,
+      desc: desc,
+      price: price,
+      images: images,
+      status: [],
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    };
+
+    const firebaseProduct = productToFirebaseProductSchema(newProduct);
+
+    return productRef.set(firebaseProduct)
       .then(() => {
         // Obtenemos el id del documento (llamado id como en todos los documentos devueltos)
-        let id = docRef.id;
-        return { ...createProductDto, id };
+        newProduct.id = productRef.id;
+        return newProduct;
       })
       .catch(() => { throw new HttpException("can't-create-product", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 
-  // UPDATE
-  async update( id: string, updateProductDto: UpdateProductDto, sellerId: string) {
-    let docRef = firebase.firestore().collection('products').doc(id);
-    let findedDoc = await docRef.get();
+  async update(id: string, sellerId: string, updateProductDto: UpdateProductDto) {
+    const productRef = firebase.firestore().collection('products').doc(id);
+    const foundProduct = await productRef.get();
 
-    if (!findedDoc.exists && findedDoc.data()["sellerId"] === sellerId) {
+    if (!foundProduct.exists) {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    return docRef.update({ ...updateProductDto })
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
+
+    if (firebaseProduct.sellerId !== sellerId) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    const { title, desc, price, images, status } = updateProductDto;
+
+    const firebaseUpdatedProduct: FirebaseProductSchema = {
+      sellerId: sellerId,
+      title: title ?? firebaseProduct.title,
+      desc: desc ?? firebaseProduct.desc,
+      price: price ?? firebaseProduct.price,
+      images: images ?? firebaseProduct.images,
+      status: status ?? firebaseProduct.status,
+      createdAt: firebaseProduct.createdAt,
+      updatedAt: admin.firestore.Timestamp.now(),
+    }
+
+    return productRef.update({...firebaseUpdatedProduct})
       .then(() => {
-        let id = findedDoc.id;
-        // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        return { ...findedDoc.data(), ...updateProductDto, id }
+        firebaseUpdatedProduct.id = productRef.id;
+        const updatedProduct: Product = firebaseProductSchemaToProduct(firebaseUpdatedProduct);
+        return updatedProduct;
       })
       .catch(() => {
         throw new HttpException("can't-update-product", HttpStatus.INTERNAL_SERVER_ERROR)
       });
   }
 
-  // DELETE
-  async remove(idProduct: string, sellerId: string) {
-    let docRef = firebase.firestore().collection('products').doc(idProduct);
-    let findedDoc = await docRef.get();
-    if (!findedDoc.exists || findedDoc.data()["sellerId"] !== sellerId) {
+  async delete(idProduct: string, sellerId: string) {
+    const productRef = firebase.firestore().collection('products').doc(idProduct);
+    const foundProduct = await productRef.get();
+
+    if (!foundProduct.exists) {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    return docRef.delete()
+    const firebaseProduct = foundProduct.data() as FirebaseProductSchema;
+
+    if (firebaseProduct.sellerId !== sellerId) {
+      throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
+    }
+
+    firebaseProduct.status.push(ProductStatus.DELETED);
+    firebaseProduct.updatedAt = admin.firestore.Timestamp.now();
+
+    return productRef.update({...firebaseProduct})
       .then(() => {
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
-        let id = findedDoc.id;
-        return { ...findedDoc.data(), id };
+        firebaseProduct.id = productRef.id;
+        const deletedProduct: Product = firebaseProductSchemaToProduct(firebaseProduct);
+        return deletedProduct;
       })
       .catch(() => { throw new HttpException("can't-delete-product", HttpStatus.INTERNAL_SERVER_ERROR) });
   }
 
-  // SELECT
-  async find(queryParams: any) {
-    
-    let docsRef = firebase.firestore().collection('products');
+  async find(queryParams: FilterProductDto) {
+    //* Hay extensiones de Firebase para hacer búsquedas complejas por nombre. Son de pago
+    //* https://firebase.google.com/docs/firestore/solutions/search?hl=es-419
 
-    // Obtenemos únicamente los documentos del vendedor
-    let findedDocs = await docsRef.get();
+    const { q, page, price_min, price_max } = queryParams;
 
-    if (findedDocs.empty) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
+    const productsRef = firebase.firestore().collection('products')
+      .where('price', '>=', price_min)
+      .where('price', '<=', price_max);
+
+    const foundProducts = await productsRef.get();
+
+    if (foundProducts.empty) {
+      const response = {
+        page: page,
+        limit: this.limit,
+        total: 0,
+        products: []
+      }
+
+      return response;
     }
 
-    // Filtramos los documentos
-    let filteredDocs = this.filterDocs(queryParams,findedDocs.docs);
+    const products: Product[] = foundProducts.docs.map((firebaseProductDoc) => {
+      const firebaseProduct = firebaseProductDoc.data() as FirebaseProductSchema;
+      firebaseProduct.id = firebaseProductDoc.id;
+      const product = firebaseProductSchemaToProduct(firebaseProduct);
+      return product;
+    });
+
+    let filteredDocs = products.filter((product) => {
+      const { title, price, status } = product;
+      return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
+             && price >= price_min && price <= price_max
+             && !(status.includes(ProductStatus.SOLD) || status.includes(ProductStatus.DELETED));
+    });
 
     // Escogemos los pertenecientes a la página
-    const {page = 1} = queryParams;
-    let skip = (page - 1) * this.limit;
+    const offset = (page - 1) * this.limit;
 
     const total = filteredDocs.length;
 
-    filteredDocs = filteredDocs.slice(skip, skip + this.limit);
+    filteredDocs = filteredDocs.slice(offset, offset + this.limit);
 
-    // Devolvemos la lista o error si no tiene productos la pagina
-    if(filteredDocs.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    } else {
-      return {
-        "page": Number.parseInt(page),
-        "limit": this.limit,
-        "total": total,
-        "products": filteredDocs
-      }
+    const response = {
+      page: page,
+      limit: this.limit,
+      total: total,
+      products: filteredDocs
     }
+
+    return response;
   }
 
   async findById(id: string) {
-    let docsRef = firebase.firestore().collection('products').doc(id);
+    const docsRef = firebase.firestore().collection('products').doc(id);
 
-    // Obtenemos únicamente el documento por el id
-    let findedDoc = await docsRef.get();
+    const foundDoc = await docsRef.get();
 
-    if(!findedDoc.exists) {
-      { throw new HttpException("", HttpStatus.NO_CONTENT) }
+    if (!foundDoc.exists) {
+      throw new HttpException("product-not-found", HttpStatus.NOT_FOUND) 
     }
-    
-    return { ...findedDoc.data(), id }
+
+    const firebaseProduct = foundDoc.data() as FirebaseProductSchema;
+
+    if(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED)) {
+      throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
+    }
+
+    firebaseProduct.id = foundDoc.id;
+
+    const product = firebaseProductSchemaToProduct(firebaseProduct);
+
+    return product;
   }
 
-  async findBySeller(queryParams: any, sellerId: string) {
-    let docsRef = firebase.firestore().collection('products');
+  async findBySeller(sellerId: string) {
+    const productsRef = firebase.firestore().collection('products')
+      .where("sellerId", "==", sellerId);
 
-    // Obtenemos únicamente los documentos del vendedor
-    let findedDocs = await docsRef.where("sellerId", "==", sellerId).get();
+    const foundProducts = await productsRef.get();
 
-    if (findedDocs.empty) {
-      { throw new HttpException("", HttpStatus.NO_CONTENT) }
+    if (foundProducts.empty) {
+      return [];
     }
 
-    // Filtramos los documentos
-    let filteredDocs = this.filterDocs(queryParams,findedDocs.docs);
+    const notSoldOrDeletedProducts: Product[] = [];
 
-    // Escogemos los productos pertenecientes a la página
-    const {page = 1} = queryParams;
-    let skip = (page - 1) * this.limit;
-
-    const total = filteredDocs.length;
-
-    filteredDocs = filteredDocs.slice(skip, skip + this.limit);
-
-    // Devolvemos la lista o error si no tiene productos la pagina
-    if(filteredDocs.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    } else {
-      return {
-        "page": Number.parseInt(page),
-        "limit": this.limit,
-        "total": total,
-        "products": filteredDocs
-      }
-    }
-    
-  }
-
-
-  // UTILS
-  private filterDocs( queryParams: any, products: any) {
-    // Obtenemos todos los parmaétros y si no están los inicializamos
-    const {q = '', price_min = 0, prime_max = Number.MAX_SAFE_INTEGER} = queryParams;
-
-    const removedQueryAccents = this.removeAccents(q).toLocaleLowerCase();
-
-    // let skip = (page - 1) * this.limit;
-
-    // Filtramos siguiendo el siguiente orden:
-    //  - Término -> ambos sin tildes ni mayúsculas
-    //  - Precio
-    let productsTemp = [];
-
-    products.forEach((product) => {
-      // Obtenemos el id del producto para asignarlo a la lista
-      let id = product.id;
-      let dataProduct = product.data();
-      
-      const removedPorductAccents = this.removeAccents(dataProduct.title).toLocaleLowerCase();
-
-      if (removedPorductAccents.includes(removedQueryAccents) && dataProduct.price >= price_min && dataProduct.price <= prime_max) {
-        productsTemp.push({ ...product.data(), id });
+    foundProducts.docs.forEach((firebaseProductDoc) => {
+      const firebaseProduct = firebaseProductDoc.data() as FirebaseProductSchema;
+      firebaseProduct.id = firebaseProductDoc.id;
+      const product = firebaseProductSchemaToProduct(firebaseProduct);
+      if(!(product.status.includes(ProductStatus.SOLD) || product.status.includes(ProductStatus.DELETED))) {
+        notSoldOrDeletedProducts.push(product);
       }
     });
 
-    return productsTemp;
+    return notSoldOrDeletedProducts.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
+  // Utils
   private removeAccents(word: string) {
     const removedAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return removedAccents; 
+    return removedAccents;
   }
 
 }
