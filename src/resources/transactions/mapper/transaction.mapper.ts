@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin';
 import { Transaction } from '../entities/transaction.entity';
-import { FirebaseTransactionSchema } from 'src/firebase/schema/firebase-transaction.schema';
+import { FirebaseTransactionSchema } from '../../../firebase/schema/firebase-transaction.schema';
 import { TransactionStatus } from '../entities/transaction-status';
 
 const validTransactionStatuses: string[] = [TransactionStatus.IN_PROCESS, TransactionStatus.RECEIVED, TransactionStatus.CANCELED];

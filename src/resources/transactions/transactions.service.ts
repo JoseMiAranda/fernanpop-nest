@@ -1,13 +1,13 @@
 import * as admin from 'firebase-admin';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import firebase from 'src/firebase/firebase';
+import firebase from '../../firebase/firebase';
 import { Transaction } from './entities/transaction.entity';
 import { Filter } from 'firebase-admin/firestore';
 import { TransactionStatus } from './entities/transaction-status';
-import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
+import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
 import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactionSchema } from './mapper/transaction.mapper';
 import { ProductStatus } from '../products/entities/produc-status.entity';
-import { FirebaseTransactionSchema } from 'src/firebase/schema/firebase-transaction.schema';
+import { FirebaseTransactionSchema } from '../../firebase/schema/firebase-transaction.schema';
 
 @Injectable()
 export class TransactionsService {

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
-import { ApiTokenCheck } from 'src/common/middleware/api-token-check';
+import { ApiTokenCheck } from '../../common/middleware/api-token-check';
 
 @Module({
   controllers: [ProductsController],

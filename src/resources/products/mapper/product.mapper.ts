@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
-import { Product } from "src/resources/products/entities/product.entity";
+import { Product } from "../../../resources/products/entities/product.entity";
 import { FirebaseProductSchema } from "../../../firebase/schema/firebase-product.schema";
-import { ProductStatus } from "src/resources/products/entities/produc-status.entity";
+import { ProductStatus } from "../../../resources/products/entities/produc-status.entity";
 
 const validProductStatuses: string[] = [ProductStatus.RESERVED, ProductStatus.SOLD, ProductStatus.DELETED];
 

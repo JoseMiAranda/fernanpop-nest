@@ -2,12 +2,12 @@ import * as admin from 'firebase-admin'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import firebase from 'src/firebase/firebase';
+import firebase from '../../firebase/firebase';
 import { Product } from './entities/product.entity';
 import { FilterProductDto } from './dto/filter-product.dto';
 import { ProductStatus } from './entities/produc-status.entity';
 import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from './mapper/product.mapper';
-import { FirebaseProductSchema } from 'src/firebase/schema/firebase-product.schema';
+import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
 
 @Injectable()
 export class ProductsService {

@@ -1,4 +1,4 @@
-import firebase from 'src/firebase/firebase';
+import firebase from '../../firebase/firebase';
 import { Injectable, NestMiddleware, HttpStatus } from '@nestjs/common'
 import { HttpException } from '@nestjs/common/exceptions/http.exception'
 import { Request, Response } from 'express'

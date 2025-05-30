@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { ImagesController } from './images.controller';
 import { CloudinaryProvider } from './providers/cloudinary.provider';
-import { ApiTokenCheck } from 'src/common/middleware/api-token-check';
+import { ApiTokenCheck } from '../../common/middleware/api-token-check';
 
 @Module({
   controllers: [ImagesController],
