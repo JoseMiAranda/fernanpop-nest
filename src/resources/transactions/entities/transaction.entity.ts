@@ -1,4 +1,5 @@
 import { TransactionStatus } from "./transaction-status";
+import { TransactionReview } from "./transaction-review.entity";
 
 export class Transaction {
     id?: string;
@@ -12,4 +13,5 @@ export class Transaction {
     status: TransactionStatus;
     createdAt: Date;
     updatedAt: Date;
+    review?: TransactionReview;
 }

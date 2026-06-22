@@ -8,9 +8,11 @@ import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.sc
 import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactionSchema } from './mapper/transaction.mapper';
 import { ProductStatus } from '../products/entities/produc-status.entity';
 import { FirebaseTransactionSchema } from '../../firebase/schema/firebase-transaction.schema';
+import { ReviewsService } from '../reviews/reviews.service';
 
 @Injectable()
 export class TransactionsService {
+  constructor(private readonly reviewsService: ReviewsService) {}
   async create(productId: string, buyerId: string) {
     //* Debe de cumplir lo siguiente:
     //* 1.- Crear una transacción
@@ -87,6 +89,23 @@ export class TransactionsService {
       const transaction = firebaseTransactionSchemaToTransaction(firebaseTransaction);
       return transaction;
     });
+
+    const receivedBuyerTransactionIds = transactions
+      .filter((t) => t.buyerId === userId && t.status === TransactionStatus.RECEIVED && t.id)
+      .map((t) => t.id!);
+
+    const reviewsMap = await this.reviewsService.findByTransactionIds(receivedBuyerTransactionIds);
+
+    for (const transaction of transactions) {
+      if (transaction.id && reviewsMap.has(transaction.id)) {
+        const review = reviewsMap.get(transaction.id)!;
+        transaction.review = {
+          score: review.score,
+          description: review.description,
+          createdAt: review.createdAt,
+        };
+      }
+    }
 
     return transactions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
