@@ -24,6 +24,11 @@ export class SellersController {
     return this.sellersService.findSold(id);
   }
 
+  @Get(':id/purchased')
+  findPurchased(@Param('id') id: string) {
+    return this.sellersService.findPurchased(id);
+  }
+
   @Get(':id/reviews')
   findReviews(@Param('id') id: string) {
     return this.reviewsService.findBySellerId(id);
