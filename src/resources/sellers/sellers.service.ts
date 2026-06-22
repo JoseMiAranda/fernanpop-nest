@@ -81,7 +81,12 @@ export class SellersService {
 
     const reviewsMap = await this.reviewsService.findByTransactionIds(transactionIds);
 
+    const sellerIds = purchasedItems.map((item) => item.sellerId);
+    const displayNames = await this.userProfileService.getDisplayNamesByIds(sellerIds);
+
     for (const item of purchasedItems) {
+      item.sellerName = displayNames.get(item.sellerId) ?? item.sellerEmail.split('@')[0];
+
       if (item.id && reviewsMap.has(item.id)) {
         const review = reviewsMap.get(item.id)!;
         item.review = {

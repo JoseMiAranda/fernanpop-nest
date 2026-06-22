@@ -8,7 +8,7 @@ export class UserProfileService {
     try {
       const user = await admin.auth().getUser(userId);
       const email = user.email ?? '';
-      const displayName = user.displayName?.trim() || email.split('@')[0] || 'Vendedor';
+      const displayName = this.resolveDisplayName(user);
 
       return {
         id: user.uid,
@@ -19,5 +19,27 @@ export class UserProfileService {
     } catch {
       throw new HttpException('seller-not-found', HttpStatus.NOT_FOUND);
     }
+  }
+
+  async getDisplayNamesByIds(userIds: string[]): Promise<Map<string, string>> {
+    const uniqueIds = [...new Set(userIds.filter(Boolean))];
+    const displayNames = new Map<string, string>();
+
+    if (uniqueIds.length === 0) {
+      return displayNames;
+    }
+
+    const usersResult = await admin.auth().getUsers(uniqueIds.map((uid) => ({ uid })));
+
+    for (const user of usersResult.users) {
+      displayNames.set(user.uid, this.resolveDisplayName(user));
+    }
+
+    return displayNames;
+  }
+
+  private resolveDisplayName(user: admin.auth.UserRecord): string {
+    const email = user.email ?? '';
+    return user.displayName?.trim() || email.split('@')[0] || 'Usuario';
   }
 }

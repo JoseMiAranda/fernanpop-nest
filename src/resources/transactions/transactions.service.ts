@@ -9,10 +9,14 @@ import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactio
 import { ProductStatus } from '../products/entities/produc-status.entity';
 import { FirebaseTransactionSchema } from '../../firebase/schema/firebase-transaction.schema';
 import { ReviewsService } from '../reviews/reviews.service';
+import { UserProfileService } from '../../common/services/user-profile.service';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly userProfileService: UserProfileService,
+  ) {}
   async create(productId: string, buyerId: string) {
     //* Debe de cumplir lo siguiente:
     //* 1.- Crear una transacción
@@ -105,6 +109,14 @@ export class TransactionsService {
           createdAt: review.createdAt,
         };
       }
+    }
+
+    const userIds = transactions.flatMap((transaction) => [transaction.sellerId, transaction.buyerId]);
+    const displayNames = await this.userProfileService.getDisplayNamesByIds(userIds);
+
+    for (const transaction of transactions) {
+      transaction.sellerName = displayNames.get(transaction.sellerId) ?? transaction.sellerEmail.split('@')[0];
+      transaction.buyerName = displayNames.get(transaction.buyerId) ?? 'Comprador';
     }
 
     return transactions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
