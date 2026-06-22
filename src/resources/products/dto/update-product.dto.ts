@@ -3,6 +3,7 @@ import { CreateProductDto } from './create-product.dto';
 import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ProductStatus } from '../entities/produc-status.entity';
 import { IsValidCategory } from '../validators/is-valid-category.validator';
+import { IsValidCondition } from '../validators/is-valid-condition.validator';
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {
     
@@ -33,6 +34,12 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
     @IsNotEmpty()
     @IsValidCategory()
     categoryId?: string
+
+    @IsOptional()
+    @IsString()
+    @IsNotEmpty()
+    @IsValidCondition()
+    condition?: string
 
     @IsOptional()
     @IsArray()

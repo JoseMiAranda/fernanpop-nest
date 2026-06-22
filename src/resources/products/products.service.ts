@@ -6,6 +6,7 @@ import firebase from '../../firebase/firebase';
 import { Product } from './entities/product.entity';
 import { FilterProductDto } from './dto/filter-product.dto';
 import { ProductStatus } from './entities/produc-status.entity';
+import { ProductCondition } from './entities/product-condition.entity';
 import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from './mapper/product.mapper';
 import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
 import { UserProfileService } from '../../common/services/user-profile.service';
@@ -22,7 +23,7 @@ export class ProductsService {
 
     const productRef = firebase.firestore().collection('products').doc();
 
-    const { title, desc, price, images, categoryId } = createProductDto;
+    const { title, desc, price, images, categoryId, condition } = createProductDto;
 
     // Ambas fechas serán iguales en la creación
     const createdAt = new Date();
@@ -35,6 +36,7 @@ export class ProductsService {
       price: price,
       images: images,
       categoryId: categoryId,
+      condition: condition as ProductCondition,
       status: [],
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -65,7 +67,7 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const { title, desc, price, images, status, categoryId } = updateProductDto;
+    const { title, desc, price, images, status, categoryId, condition } = updateProductDto;
 
     const firebaseUpdatedProduct: FirebaseProductSchema = {
       sellerId: sellerId,
@@ -74,6 +76,7 @@ export class ProductsService {
       price: price ?? firebaseProduct.price,
       images: images ?? firebaseProduct.images,
       categoryId: categoryId ?? firebaseProduct.categoryId,
+      condition: condition ?? firebaseProduct.condition,
       status: status ?? firebaseProduct.status,
       createdAt: firebaseProduct.createdAt,
       updatedAt: admin.firestore.Timestamp.now(),

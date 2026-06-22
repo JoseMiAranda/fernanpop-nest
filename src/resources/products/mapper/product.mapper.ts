@@ -2,6 +2,8 @@ import * as admin from 'firebase-admin';
 import { Product } from "../../../resources/products/entities/product.entity";
 import { FirebaseProductSchema } from "../../../firebase/schema/firebase-product.schema";
 import { ProductStatus } from "../../../resources/products/entities/produc-status.entity";
+import { ProductCondition } from "../../../resources/products/entities/product-condition.entity";
+import { isValidConditionId } from "../../../resources/products/product-conditions.constants";
 
 const validProductStatuses: string[] = [ProductStatus.RESERVED, ProductStatus.SOLD, ProductStatus.DELETED];
 
@@ -14,6 +16,9 @@ export function firebaseProductSchemaToProduct(firebaseProductSchema: FirebasePr
         price: firebaseProductSchema.price,
         images: firebaseProductSchema.images,
         categoryId: firebaseProductSchema.categoryId,
+        condition: firebaseProductSchema.condition && isValidConditionId(firebaseProductSchema.condition)
+            ? firebaseProductSchema.condition as ProductCondition
+            : undefined,
         status: firebaseProductSchema.status.filter(s => validProductStatuses.includes(s)) as ProductStatus[],
         createdAt: firebaseProductSchema.createdAt.toDate(),
         updatedAt: firebaseProductSchema.updatedAt.toDate(),
@@ -30,6 +35,7 @@ export function productToFirebaseProductSchema(product: Product): FirebaseProduc
         price: product.price,
         images: product.images,
         categoryId: product.categoryId,
+        condition: product.condition,
         status: product.status,
         createdAt: admin.firestore.Timestamp.fromDate(product.createdAt),
         updatedAt: admin.firestore.Timestamp.fromDate(product.updatedAt),

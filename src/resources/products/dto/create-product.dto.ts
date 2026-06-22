@@ -1,5 +1,6 @@
 import { IsArray, IsNotEmpty, IsNumber, IsString, Max, Min } from "class-validator";
 import { IsValidCategory } from "../validators/is-valid-category.validator";
+import { IsValidCondition } from "../validators/is-valid-condition.validator";
 
 export class CreateProductDto {
 
@@ -25,4 +26,9 @@ export class CreateProductDto {
     @IsNotEmpty()
     @IsValidCategory()
     categoryId: string
+
+    @IsString()
+    @IsNotEmpty()
+    @IsValidCondition()
+    condition: string
 }
