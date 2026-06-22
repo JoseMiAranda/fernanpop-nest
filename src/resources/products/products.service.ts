@@ -119,7 +119,7 @@ export class ProductsService {
     //* Hay extensiones de Firebase para hacer búsquedas complejas por nombre. Son de pago
     //* https://firebase.google.com/docs/firestore/solutions/search?hl=es-419
 
-    const { q, page, price_min, price_max } = queryParams;
+    const { q, page, price_min, price_max, categoryId } = queryParams;
 
     const productsRef = firebase.firestore().collection('products')
       .where('price', '>=', price_min)
@@ -147,8 +147,10 @@ export class ProductsService {
 
     let filteredDocs = products.filter((product) => {
       const { title, price, status } = product;
+      const matchesCategory = !categoryId || product.categoryId === categoryId;
       return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
              && price >= price_min && price <= price_max
+             && matchesCategory
              && !(status.includes(ProductStatus.SOLD) || status.includes(ProductStatus.DELETED));
     });
 
