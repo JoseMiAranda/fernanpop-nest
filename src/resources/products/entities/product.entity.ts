@@ -7,6 +7,7 @@ export class Product {
     desc: string;
     price: number;
     images: string[];
+    categoryId?: string;
     status: ProductStatus[];
     createdAt: Date;
     updatedAt: Date;

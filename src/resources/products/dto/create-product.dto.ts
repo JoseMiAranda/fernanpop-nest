@@ -1,4 +1,5 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, Max, Min } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsString, Max, Min } from "class-validator";
+import { IsValidCategory } from "../validators/is-valid-category.validator";
 
 export class CreateProductDto {
 
@@ -19,4 +20,9 @@ export class CreateProductDto {
     @Min(0)
     @Max(Number.MAX_SAFE_INTEGER)
     price: number
+
+    @IsString()
+    @IsNotEmpty()
+    @IsValidCategory()
+    categoryId: string
 }

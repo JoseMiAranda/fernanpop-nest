@@ -7,6 +7,7 @@ export class FirebaseProductSchema {
     desc: string;
     price: number;
     images: string[];
+    categoryId?: string;
     status: string[];
     createdAt: admin.firestore.Timestamp;
     updatedAt: admin.firestore.Timestamp;

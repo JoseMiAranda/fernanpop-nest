@@ -20,7 +20,7 @@ export class ProductsService {
 
     const productRef = firebase.firestore().collection('products').doc();
 
-    const { title, desc, price, images } = createProductDto;
+    const { title, desc, price, images, categoryId } = createProductDto;
 
     // Ambas fechas serán iguales en la creación
     const createdAt = new Date();
@@ -32,6 +32,7 @@ export class ProductsService {
       desc: desc,
       price: price,
       images: images,
+      categoryId: categoryId,
       status: [],
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -62,7 +63,7 @@ export class ProductsService {
       throw new HttpException('product-not-found', HttpStatus.NOT_FOUND);
     }
 
-    const { title, desc, price, images, status } = updateProductDto;
+    const { title, desc, price, images, status, categoryId } = updateProductDto;
 
     const firebaseUpdatedProduct: FirebaseProductSchema = {
       sellerId: sellerId,
@@ -70,6 +71,7 @@ export class ProductsService {
       desc: desc ?? firebaseProduct.desc,
       price: price ?? firebaseProduct.price,
       images: images ?? firebaseProduct.images,
+      categoryId: categoryId ?? firebaseProduct.categoryId,
       status: status ?? firebaseProduct.status,
       createdAt: firebaseProduct.createdAt,
       updatedAt: admin.firestore.Timestamp.now(),
