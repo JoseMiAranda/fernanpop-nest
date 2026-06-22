@@ -134,7 +134,7 @@ export class TransactionsService {
 
     const firebaseUpdatedProduct: FirebaseProductSchema = {
       ...firebaseProduct,
-      status: [...firebaseProduct.status, ProductStatus.RESERVED],
+      status: [ProductStatus.SOLD],
       updatedAt: admin.firestore.Timestamp.fromDate(updatedAt),
     }
 

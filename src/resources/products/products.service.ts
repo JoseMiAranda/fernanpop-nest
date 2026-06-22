@@ -8,13 +8,15 @@ import { FilterProductDto } from './dto/filter-product.dto';
 import { ProductStatus } from './entities/produc-status.entity';
 import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from './mapper/product.mapper';
 import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
+import { UserProfileService } from '../../common/services/user-profile.service';
+import { ProductDetail } from './entities/product-detail.entity';
 
 @Injectable()
 export class ProductsService {
 
   limit = 10;
 
-  constructor() { }
+  constructor(private readonly userProfileService: UserProfileService) { }
 
   async create(createProductDto: CreateProductDto, sellerId: string) {
 
@@ -189,8 +191,18 @@ export class ProductsService {
     firebaseProduct.id = foundDoc.id;
 
     const product = firebaseProductSchemaToProduct(firebaseProduct);
+    const sellerProfile = await this.userProfileService.getSellerProfile(product.sellerId);
 
-    return product;
+    const productDetail: ProductDetail = {
+      ...product,
+      seller: {
+        id: sellerProfile.id,
+        displayName: sellerProfile.displayName,
+        photoUrl: sellerProfile.photoUrl,
+      },
+    };
+
+    return productDetail;
   }
 
   async findBySeller(sellerId: string) {
