@@ -124,7 +124,7 @@ export class ProductsService {
     //* Hay extensiones de Firebase para hacer búsquedas complejas por nombre. Son de pago
     //* https://firebase.google.com/docs/firestore/solutions/search?hl=es-419
 
-    const { q, page, price_min, price_max, categoryId } = queryParams;
+    const { q, page, price_min, price_max, categoryId, sort, reserved } = queryParams;
 
     const productsRef = firebase.firestore().collection('products')
       .where('price', '>=', price_min)
@@ -153,10 +153,22 @@ export class ProductsService {
     let filteredDocs = products.filter((product) => {
       const { title, price, status } = product;
       const matchesCategory = !categoryId || product.categoryId === categoryId;
+      const isReserved = status.includes(ProductStatus.RESERVED);
+      const matchesReserved =
+        reserved === 'all' ||
+        (reserved === 'yes' && isReserved) ||
+        (reserved === 'no' && !isReserved);
+
       return this.removeAccents(title.toLocaleLowerCase()).includes(this.removeAccents(q.toLocaleLowerCase())) 
              && price >= price_min && price <= price_max
              && matchesCategory
+             && matchesReserved
              && !(status.includes(ProductStatus.SOLD) || status.includes(ProductStatus.DELETED));
+    });
+
+    filteredDocs.sort((a, b) => {
+      const diff = b.createdAt.getTime() - a.createdAt.getTime();
+      return sort === 'newest' ? diff : -diff;
     });
 
     // Escogemos los pertenecientes a la página

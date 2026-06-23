@@ -1,6 +1,12 @@
-import { IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsValidCategory } from '../validators/is-valid-category.validator';
+
+export const PRODUCT_SORT_OPTIONS = ['newest', 'oldest'] as const;
+export type ProductSortOption = (typeof PRODUCT_SORT_OPTIONS)[number];
+
+export const PRODUCT_RESERVED_FILTER_OPTIONS = ['all', 'yes', 'no'] as const;
+export type ProductReservedFilterOption = (typeof PRODUCT_RESERVED_FILTER_OPTIONS)[number];
 
 export class FilterProductDto {
     @IsOptional()
@@ -33,4 +39,12 @@ export class FilterProductDto {
     @IsValidCategory()
     @Transform(({ value }) => value === '' ? undefined : value)
     categoryId?: string;
+
+    @IsOptional()
+    @IsIn(PRODUCT_SORT_OPTIONS)
+    sort: ProductSortOption = 'newest';
+
+    @IsOptional()
+    @IsIn(PRODUCT_RESERVED_FILTER_OPTIONS)
+    reserved: ProductReservedFilterOption = 'all';
 }
