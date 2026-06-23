@@ -4,6 +4,7 @@ import { TransactionReview } from "./transaction-review.entity";
 export class Transaction {
     id?: string;
     productId: string;
+    productSlug?: string;
     sellerId: string;
     buyerId: string;
     sellerEmail: string;

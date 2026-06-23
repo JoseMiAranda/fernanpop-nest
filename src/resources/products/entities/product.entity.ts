@@ -3,6 +3,7 @@ import { ProductCondition } from "./product-condition.entity";
 
 export class Product {
     id?: string;
+    slug: string;
     sellerId: string;
     title: string;
     desc: string;

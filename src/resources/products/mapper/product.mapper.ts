@@ -4,12 +4,17 @@ import { FirebaseProductSchema } from "../../../firebase/schema/firebase-product
 import { ProductStatus } from "../../../resources/products/entities/produc-status.entity";
 import { ProductCondition } from "../../../resources/products/entities/product-condition.entity";
 import { isValidConditionId } from "../../../resources/products/product-conditions.constants";
+import { generateProductSlug } from "../utils/product-slug.util";
 
 const validProductStatuses: string[] = [ProductStatus.RESERVED, ProductStatus.SOLD, ProductStatus.DELETED];
 
 export function firebaseProductSchemaToProduct(firebaseProductSchema: FirebaseProductSchema): Product {
     const product: Product = {
         id: firebaseProductSchema.id,
+        slug: firebaseProductSchema.slug ?? generateProductSlug(
+            firebaseProductSchema.title,
+            firebaseProductSchema.createdAt.toDate().getTime(),
+        ),
         sellerId: firebaseProductSchema.sellerId,
         title: firebaseProductSchema.title,
         desc: firebaseProductSchema.desc,
@@ -29,6 +34,7 @@ export function firebaseProductSchemaToProduct(firebaseProductSchema: FirebasePr
 
 export function productToFirebaseProductSchema(product: Product): FirebaseProductSchema {
     const productSchema: FirebaseProductSchema = {
+        slug: product.slug,
         sellerId: product.sellerId,
         title: product.title,
         desc: product.desc,

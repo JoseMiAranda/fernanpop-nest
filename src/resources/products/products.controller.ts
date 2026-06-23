@@ -20,9 +20,9 @@ export class ProductsController {
     return this.productsService.findBySeller(request["firebaseUser"]["uid"]);
   }
 
-  @Get(':id')
-  findById(@Param('id') id: string){
-    return this.productsService.findById(id);
+  @Get(':slug')
+  findBySlug(@Param('slug') slug: string){
+    return this.productsService.findBySlug(slug);
   }
 
   @Post()

@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 
 export class FirebaseProductSchema {
     id?: string;
+    slug: string;
     sellerId: string;
     title: string;
     desc: string;

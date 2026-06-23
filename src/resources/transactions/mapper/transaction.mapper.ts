@@ -9,6 +9,7 @@ export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: Fi
     const transaction: Transaction = {
        id: firebaseProductSchema.id,
        productId: firebaseProductSchema.productId,
+       productSlug: firebaseProductSchema.productSlug,
        sellerId: firebaseProductSchema.sellerId,
        buyerId: firebaseProductSchema.buyerId,
        sellerEmail: firebaseProductSchema.sellerEmail,
@@ -28,6 +29,7 @@ export function firebaseTransactionSchemaToTransaction(firebaseProductSchema: Fi
 export function transactionToFirebaseTransactionSchema(transaction: Transaction): FirebaseTransactionSchema {
     const transactionSchema: FirebaseTransactionSchema = {
         productId: transaction.productId,
+        productSlug: transaction.productSlug,
         sellerId: transaction.sellerId,
         buyerId: transaction.buyerId,
         sellerEmail: transaction.sellerEmail,

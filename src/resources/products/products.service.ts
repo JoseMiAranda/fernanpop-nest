@@ -11,6 +11,7 @@ import { firebaseProductSchemaToProduct, productToFirebaseProductSchema } from '
 import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
 import { UserProfileService } from '../../common/services/user-profile.service';
 import { ProductDetail } from './entities/product-detail.entity';
+import { generateProductSlug } from './utils/product-slug.util';
 
 @Injectable()
 export class ProductsService {
@@ -29,7 +30,10 @@ export class ProductsService {
     const createdAt = new Date();
     const updatedAt = createdAt;
 
+    const slug = generateProductSlug(title, createdAt.getTime());
+
     const newProduct: Product = {
+      slug,
       sellerId: sellerId,
       title: title,
       desc: desc,
@@ -70,6 +74,7 @@ export class ProductsService {
     const { title, desc, price, images, status, categoryId, condition } = updateProductDto;
 
     const firebaseUpdatedProduct: FirebaseProductSchema = {
+      slug: firebaseProduct.slug,
       sellerId: sellerId,
       title: title ?? firebaseProduct.title,
       desc: desc ?? firebaseProduct.desc,
@@ -186,6 +191,49 @@ export class ProductsService {
     }
 
     return response;
+  }
+
+  async findBySlug(slug: string) {
+    const foundBySlug = await firebase.firestore().collection('products')
+      .where('slug', '==', slug)
+      .limit(1)
+      .get();
+
+    let productId: string;
+    let firebaseProduct: FirebaseProductSchema;
+
+    if (!foundBySlug.empty) {
+      const doc = foundBySlug.docs[0];
+      productId = doc.id;
+      firebaseProduct = doc.data() as FirebaseProductSchema;
+    } else {
+      const foundById = await firebase.firestore().collection('products').doc(slug).get();
+      if (!foundById.exists) {
+        throw new HttpException("product-not-found", HttpStatus.NOT_FOUND);
+      }
+      productId = foundById.id;
+      firebaseProduct = foundById.data() as FirebaseProductSchema;
+    }
+
+    if(firebaseProduct.status.includes(ProductStatus.SOLD) || firebaseProduct.status.includes(ProductStatus.DELETED)) {
+      throw new HttpException("product-not-found", HttpStatus.NOT_FOUND)
+    }
+
+    firebaseProduct.id = productId;
+
+    const product = firebaseProductSchemaToProduct(firebaseProduct);
+    const sellerProfile = await this.userProfileService.getSellerProfile(product.sellerId);
+
+    const productDetail: ProductDetail = {
+      ...product,
+      seller: {
+        id: sellerProfile.id,
+        displayName: sellerProfile.displayName,
+        photoUrl: sellerProfile.photoUrl,
+      },
+    };
+
+    return productDetail;
   }
 
   async findById(id: string) {

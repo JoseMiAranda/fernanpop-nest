@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 export class FirebaseTransactionSchema {
     id?: string;
     productId: string;
+    productSlug?: string;
     sellerId: string;
     buyerId: string;
     sellerEmail: string; 

@@ -7,6 +7,7 @@ import { TransactionStatus } from './entities/transaction-status';
 import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.schema';
 import { firebaseTransactionSchemaToTransaction, transactionToFirebaseTransactionSchema } from './mapper/transaction.mapper';
 import { ProductStatus } from '../products/entities/produc-status.entity';
+import { generateProductSlug } from '../products/utils/product-slug.util';
 import { FirebaseTransactionSchema } from '../../firebase/schema/firebase-transaction.schema';
 import { ReviewsService } from '../reviews/reviews.service';
 import { UserProfileService } from '../../common/services/user-profile.service';
@@ -44,6 +45,10 @@ export class TransactionsService {
 
     const newTransaction: Transaction = {
       productId: productRef.id,
+      productSlug: firebaseProduct.slug ?? generateProductSlug(
+        firebaseProduct.title,
+        firebaseProduct.createdAt.toDate().getTime(),
+      ),
       sellerId: firebaseProduct.sellerId,
       buyerId: buyerId,
       sellerEmail: sellerEmail,
