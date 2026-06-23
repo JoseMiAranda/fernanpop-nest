@@ -13,7 +13,7 @@ export class UserProfileService {
       return {
         id: user.uid,
         displayName,
-        photoUrl: user.photoURL ?? undefined,
+        photoUrl: this.resolvePhotoUrl(user),
         email: email || undefined,
       };
     } catch {
@@ -36,6 +36,19 @@ export class UserProfileService {
     }
 
     return displayNames;
+  }
+
+  private resolvePhotoUrl(user: admin.auth.UserRecord): string | undefined {
+    if (user.photoURL) {
+      return user.photoURL;
+    }
+
+    const googleProvider = user.providerData?.find((p) => p.providerId === 'google.com');
+    if (googleProvider?.photoURL) {
+      return googleProvider.photoURL;
+    }
+
+    return user.providerData?.find((p) => p.photoURL)?.photoURL ?? undefined;
   }
 
   private resolveDisplayName(user: admin.auth.UserRecord): string {
