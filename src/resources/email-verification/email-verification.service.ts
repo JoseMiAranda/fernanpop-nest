@@ -10,6 +10,8 @@ import { RateLimiterService } from '../../common/services/rate-limiter.service';
 
 export type EmailVerificationAction = 'send' | 'check';
 
+const FIREBASE_EMAIL_LOCALE = 'es';
+
 @Injectable()
 export class EmailVerificationService {
   constructor(
@@ -69,7 +71,10 @@ export class EmailVerificationService {
       `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Firebase-Locale': FIREBASE_EMAIL_LOCALE,
+        },
         body: JSON.stringify({
           requestType: 'VERIFY_EMAIL',
           idToken,
