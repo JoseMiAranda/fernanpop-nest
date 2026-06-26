@@ -8,8 +8,6 @@ export class ApiTokenCheck implements NestMiddleware {
     async use(req: Request, _: Response, next: Function) {
         const { authorization } = req.headers;
 
-        console.log('authorization', authorization)
-
         if(!authorization) {
             throw new HttpException({ message: 'Authorization api key required' }, HttpStatus.UNAUTHORIZED)
         }
