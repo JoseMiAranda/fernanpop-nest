@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import firebase from '../../firebase/firebase';
 import {
@@ -6,22 +6,94 @@ import {
   EMAIL_VERIFICATION_SEND_LIMIT,
   RATE_LIMIT_EXCEEDED,
 } from '../../common/constants/email-verification-limits';
+import { MailService } from '../../common/services/mail.service';
 import { RateLimiterService } from '../../common/services/rate-limiter.service';
 
 export type EmailVerificationAction = 'send' | 'check';
 
-const FIREBASE_EMAIL_LOCALE = 'es';
-
 @Injectable()
 export class EmailVerificationService {
+  private readonly logger = new Logger(EmailVerificationService.name);
+
   constructor(
     private readonly rateLimiter: RateLimiterService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService,
   ) {}
 
-  async sendVerificationEmail(uid: string, idToken: string): Promise<void> {
+  async sendVerificationEmail(uid: string): Promise<void> {
     this.assertWithinLimit(uid, 'send', EMAIL_VERIFICATION_SEND_LIMIT);
-    await this.sendOobCode(idToken);
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    if (!frontendUrl) {
+      throw new HttpException(
+        { message: 'email-verification-unavailable' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    const user = await firebase.auth().getUser(uid);
+    if (!user.email) {
+      throw new HttpException(
+        { message: 'email-verification-send-failed' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const verifyEmailUrl = `${frontendUrl.replace(/\/$/, '')}/verify-email`;
+    const actionCodeSettings = {
+      url: verifyEmailUrl,
+      handleCodeInApp: true,
+    };
+
+    let verificationLink: string;
+    try {
+      const firebaseLink = await firebase
+        .auth()
+        .generateEmailVerificationLink(user.email, actionCodeSettings);
+      verificationLink = this.buildFrontendVerificationLink(firebaseLink, verifyEmailUrl);
+    } catch (error) {
+      this.logger.error(
+        `No se pudo generar el enlace de verificación para ${user.email}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw new HttpException(
+        { message: 'email-verification-send-failed' },
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    try {
+      await this.mailService.sendVerificationEmail(
+        user.email,
+        verificationLink,
+        user.displayName,
+      );
+    } catch (error) {
+      this.logger.error(
+        `No se pudo enviar el correo de verificación a ${user.email}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw new HttpException(
+        { message: 'email-verification-send-failed' },
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  private buildFrontendVerificationLink(firebaseLink: string, verifyEmailUrl: string): string {
+    const firebaseUrl = new URL(firebaseLink);
+    const oobCode = firebaseUrl.searchParams.get('oobCode');
+
+    if (!oobCode) {
+      throw new Error('El enlace generado por Firebase no contiene oobCode.');
+    }
+
+    const frontendLink = new URL(verifyEmailUrl);
+    frontendLink.searchParams.set('mode', 'verifyEmail');
+    frontendLink.searchParams.set('oobCode', oobCode);
+
+    return frontendLink.toString();
   }
 
   async checkVerificationStatus(uid: string): Promise<{ emailVerified: boolean }> {
@@ -53,49 +125,6 @@ export class EmailVerificationService {
           retryAfterMs: result.retryAfterMs,
         },
         HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-  }
-
-  private async sendOobCode(idToken: string): Promise<void> {
-    const apiKey = this.configService.get<string>('FIREBASE_WEB_API_KEY');
-
-    if (!apiKey) {
-      throw new HttpException(
-        { message: 'email-verification-unavailable' },
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
-    }
-
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Firebase-Locale': FIREBASE_EMAIL_LOCALE,
-        },
-        body: JSON.stringify({
-          requestType: 'VERIFY_EMAIL',
-          idToken,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      const firebaseMessage = errorBody?.error?.message as string | undefined;
-
-      if (firebaseMessage === 'TOO_MANY_ATTEMPTS_TRY_LATER') {
-        throw new HttpException(
-          { message: 'firebase-too-many-requests' },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-
-      throw new HttpException(
-        { message: 'email-verification-send-failed' },
-        HttpStatus.BAD_GATEWAY,
       );
     }
   }

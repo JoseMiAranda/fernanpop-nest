@@ -9,9 +9,7 @@ export class EmailVerificationController {
   @Post('send')
   @HttpCode(HttpStatus.NO_CONTENT)
   async send(@Req() request: Request) {
-    const uid = request.firebaseUser.uid;
-    const idToken = this.extractBearerToken(request);
-    await this.emailVerificationService.sendVerificationEmail(uid, idToken);
+    await this.emailVerificationService.sendVerificationEmail(request.firebaseUser.uid);
   }
 
   @Post('check')
@@ -22,10 +20,5 @@ export class EmailVerificationController {
   @Get('limits')
   getLimits(@Req() request: Request) {
     return this.emailVerificationService.getLimits(request.firebaseUser.uid);
-  }
-
-  private extractBearerToken(request: Request): string {
-    const authorization = request.headers.authorization ?? '';
-    return authorization.startsWith('Bearer ') ? authorization.slice(7) : authorization;
   }
 }
