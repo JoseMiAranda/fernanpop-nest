@@ -187,6 +187,7 @@ export class ConversationsService {
     batch.update(conversationRef, {
       updatedAt: admin.firestore.Timestamp.fromDate(createdAt),
       lastMessageAt: admin.firestore.Timestamp.fromDate(createdAt),
+      lastMessageSenderId: userId,
     });
 
     return batch.commit().then(() => {

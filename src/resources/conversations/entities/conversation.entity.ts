@@ -15,4 +15,5 @@ export class Conversation {
   createdAt: Date;
   updatedAt: Date;
   lastMessageAt: Date;
+  lastMessageSenderId?: string;
 }

@@ -28,6 +28,7 @@ export function firebaseConversationSchemaToConversation(
     createdAt: firebaseConversation.createdAt.toDate(),
     updatedAt: firebaseConversation.updatedAt.toDate(),
     lastMessageAt: firebaseConversation.lastMessageAt.toDate(),
+    lastMessageSenderId: firebaseConversation.lastMessageSenderId,
   };
 }
 
@@ -49,6 +50,10 @@ export function conversationToFirebaseConversationSchema(
 
   if (conversation.disabledReason) {
     firebaseConversation.disabledReason = conversation.disabledReason;
+  }
+
+  if (conversation.lastMessageSenderId) {
+    firebaseConversation.lastMessageSenderId = conversation.lastMessageSenderId;
   }
 
   return firebaseConversation;

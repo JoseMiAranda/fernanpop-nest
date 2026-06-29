@@ -13,4 +13,5 @@ export class FirebaseConversationSchema {
   createdAt: admin.firestore.Timestamp;
   updatedAt: admin.firestore.Timestamp;
   lastMessageAt: admin.firestore.Timestamp;
+  lastMessageSenderId?: string;
 }
