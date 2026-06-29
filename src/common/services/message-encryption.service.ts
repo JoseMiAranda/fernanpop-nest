@@ -13,17 +13,13 @@ export class MessageEncryptionService {
   private readonly key: Buffer;
 
   constructor() {
-    const keyHex = process.env.MESSAGES_ENCRYPTION_KEY;
+    const encryptionKey = process.env.MESSAGES_ENCRYPTION_KEY;
 
-    if (!keyHex) {
+    if (!encryptionKey) {
       throw new InternalServerErrorException('messages-encryption-key-not-configured');
     }
 
-    if (!/^[0-9a-fA-F]{64}$/.test(keyHex)) {
-      throw new InternalServerErrorException('messages-encryption-key-invalid');
-    }
-
-    this.key = Buffer.from(keyHex, 'hex');
+    this.key = this.parseEncryptionKey(encryptionKey);
   }
 
   encrypt(plainText: string): EncryptedMessagePayload {
@@ -57,5 +53,17 @@ export class MessageEncryptionService {
     ]);
 
     return plainText.toString('utf8');
+  }
+
+  private parseEncryptionKey(encryptionKey: string): Buffer {
+    if (/^[0-9a-fA-F]{64}$/.test(encryptionKey)) {
+      return Buffer.from(encryptionKey, 'hex');
+    }
+
+    if (/^[A-Za-z0-9+/]{43}=$/.test(encryptionKey)) {
+      return Buffer.from(encryptionKey, 'base64');
+    }
+
+    throw new InternalServerErrorException('messages-encryption-key-invalid');
   }
 }
