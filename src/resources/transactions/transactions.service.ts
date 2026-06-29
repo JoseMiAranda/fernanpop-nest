@@ -11,12 +11,15 @@ import { generateProductSlug } from '../products/utils/product-slug.util';
 import { FirebaseTransactionSchema } from '../../firebase/schema/firebase-transaction.schema';
 import { ReviewsService } from '../reviews/reviews.service';
 import { UserProfileService } from '../../common/services/user-profile.service';
+import { ConversationsService } from '../conversations/conversations.service';
+import { ConversationDisabledReason } from '../conversations/entities/conversation-disabled-reason.entity';
 
 @Injectable()
 export class TransactionsService {
   constructor(
     private readonly reviewsService: ReviewsService,
     private readonly userProfileService: UserProfileService,
+    private readonly conversationsService: ConversationsService,
   ) {}
   async create(productId: string, buyerId: string) {
     //* Debe de cumplir lo siguiente:
@@ -179,7 +182,11 @@ export class TransactionsService {
     batch.update(transactionRef, {...firebaseSoldTransaction});                            
     batch.update(productRef, {...firebaseUpdatedProduct});
     
-    return batch.commit().then(() => {
+    return batch.commit().then(async () => {
+      await this.conversationsService.disableByProductId(
+        firebaseTransaction.productId,
+        ConversationDisabledReason.SOLD,
+      );
       const soldTransaction = firebaseTransactionSchemaToTransaction(firebaseSoldTransaction);
       soldTransaction.id = transactionRef.id;
       return soldTransaction;

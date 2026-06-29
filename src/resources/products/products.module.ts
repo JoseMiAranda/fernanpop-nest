@@ -3,8 +3,10 @@ import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
 import { ApiTokenCheck } from '../../common/middleware/api-token-check';
 import { EmailVerifiedCheck } from '../../common/middleware/email-verified-check';
+import { ConversationsModule } from '../conversations/conversations.module';
 
 @Module({
+  imports: [ConversationsModule],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService]

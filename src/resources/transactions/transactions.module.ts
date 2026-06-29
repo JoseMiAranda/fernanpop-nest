@@ -4,9 +4,10 @@ import { TransactionsController } from './transactions.controller';
 import { ApiTokenCheck } from '../../common/middleware/api-token-check';
 import { EmailVerifiedCheck } from '../../common/middleware/email-verified-check';
 import { ReviewsModule } from '../reviews/reviews.module';
+import { ConversationsModule } from '../conversations/conversations.module';
 
 @Module({
-  imports: [ReviewsModule],
+  imports: [ReviewsModule, ConversationsModule],
   controllers: [TransactionsController],
   providers: [TransactionsService],
   exports: [TransactionsService]

@@ -11,9 +11,10 @@ import { FavoritesModule } from './resources/favorites/favorites.module';
 import { EmailVerificationModule } from './resources/email-verification/email-verification.module';
 import { CommonModule } from './common/common.module';
 import { ConfigModule } from '@nestjs/config';
+import { ConversationsModule } from './resources/conversations/conversations.module';
 
 @Module({
-  imports: [CommonModule, ProductsModule, CategoriesModule, TransactionsModule, ImagesModule, SellersModule, ReviewsModule, FavoritesModule, EmailVerificationModule, ConfigModule.forRoot({isGlobal: true})],
+  imports: [CommonModule, ProductsModule, CategoriesModule, TransactionsModule, ImagesModule, SellersModule, ReviewsModule, FavoritesModule, EmailVerificationModule, ConversationsModule, ConfigModule.forRoot({isGlobal: true})],
   controllers: [AppController],
   providers: [AppService],
 })

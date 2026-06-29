@@ -12,13 +12,18 @@ import { FirebaseProductSchema } from '../../firebase/schema/firebase-product.sc
 import { UserProfileService } from '../../common/services/user-profile.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { generateProductSlug } from './utils/product-slug.util';
+import { ConversationsService } from '../conversations/conversations.service';
+import { ConversationDisabledReason } from '../conversations/entities/conversation-disabled-reason.entity';
 
 @Injectable()
 export class ProductsService {
 
   limit = 10;
 
-  constructor(private readonly userProfileService: UserProfileService) { }
+  constructor(
+    private readonly userProfileService: UserProfileService,
+    private readonly conversationsService: ConversationsService,
+  ) { }
 
   async create(createProductDto: CreateProductDto, sellerId: string) {
 
@@ -116,7 +121,11 @@ export class ProductsService {
     firebaseProduct.updatedAt = admin.firestore.Timestamp.now();
 
     return productRef.update({...firebaseProduct})
-      .then(() => {
+      .then(async () => {
+        await this.conversationsService.disableByProductId(
+          idProduct,
+          ConversationDisabledReason.DELETED,
+        );
         // Devolvemos el objeto encontrado con los cambios que hayamos especificado
         firebaseProduct.id = productRef.id;
         const deletedProduct: Product = firebaseProductSchemaToProduct(firebaseProduct);
